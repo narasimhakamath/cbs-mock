@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: cbs-mock
-          image: cbs:latest
+          image: cbs:1.0.1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4000
           envFrom:
