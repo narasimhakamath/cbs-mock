@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cbs-mock
+  labels:
+    app: cbs-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cbs-mock
+  template:
+    metadata:
+      labels:
+        app: cbs-mock
+    spec:
+      containers:
+        - name: cbs-mock
+          image: cbs-mock:latest
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+                name: cbs-mock-config
+            - secretRef:
+                name: cbs-mock-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

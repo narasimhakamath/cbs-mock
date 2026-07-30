@@ -1,0 +1,96 @@
+import axios from 'axios';
+
+export const api = axios.create({
+  baseURL: '/api',
+});
+
+export async function fetchConfig() {
+  const { data } = await api.get('/config');
+  return data;
+}
+
+export async function fetchAccounts({
+  page = 1,
+  limit = 10,
+  search = '',
+  partyId,
+  sortBy,
+  sortOrder,
+} = {}) {
+  const { data } = await api.get('/accounts', {
+    params: { page, limit, search, partyId, sortBy, sortOrder },
+  });
+  return data;
+}
+
+export async function fetchAccount(id) {
+  const { data } = await api.get(`/accounts/${id}`);
+  return data;
+}
+
+export async function createAccount(payload) {
+  const { data } = await api.post('/accounts', payload);
+  return data;
+}
+
+export async function updateAccount(id, payload) {
+  const { data } = await api.patch(`/accounts/${id}`, payload);
+  return data;
+}
+
+export async function deleteAccount(id) {
+  await api.delete(`/accounts/${id}`);
+}
+
+export async function fetchParties({ page = 1, limit = 10, search = '', type, bankId } = {}) {
+  const { data } = await api.get('/parties', { params: { page, limit, search, type, bankId } });
+  return data;
+}
+
+export async function fetchParty(id) {
+  const { data } = await api.get(`/parties/${id}`);
+  return data;
+}
+
+export async function createParty(payload) {
+  const { data } = await api.post('/parties', payload);
+  return data;
+}
+
+export async function updateParty(id, payload) {
+  const { data } = await api.patch(`/parties/${id}`, payload);
+  return data;
+}
+
+export async function deleteParty(id) {
+  await api.delete(`/parties/${id}`);
+}
+
+export async function fetchPartyAccounts(id, { page = 1, limit = 10 } = {}) {
+  const { data } = await api.get(`/parties/${id}/accounts`, { params: { page, limit } });
+  return data;
+}
+
+export async function fetchBanks({ page = 1, limit = 10, search = '' } = {}) {
+  const { data } = await api.get('/banks', { params: { page, limit, search } });
+  return data;
+}
+
+export async function fetchBank(id) {
+  const { data } = await api.get(`/banks/${id}`);
+  return data;
+}
+
+export async function createBank(payload) {
+  const { data } = await api.post('/banks', payload);
+  return data;
+}
+
+export async function updateBank(id, payload) {
+  const { data } = await api.patch(`/banks/${id}`, payload);
+  return data;
+}
+
+export async function deleteBank(id) {
+  await api.delete(`/banks/${id}`);
+}
