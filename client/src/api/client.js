@@ -42,6 +42,21 @@ export async function deleteAccount(id) {
   await api.delete(`/accounts/${id}`);
 }
 
+export async function fetchTransactions(accountId, { page = 1, limit = 10 } = {}) {
+  const { data } = await api.get(`/accounts/${accountId}/transactions`, { params: { page, limit } });
+  return data;
+}
+
+export async function createInwardCredit(accountId, payload) {
+  const { data } = await api.post(`/accounts/${accountId}/transactions/inward-credit`, payload);
+  return data;
+}
+
+export async function createOutwardDebit(accountId, payload) {
+  const { data } = await api.post(`/accounts/${accountId}/transactions/outward-debit`, payload);
+  return data;
+}
+
 export async function fetchParties({ page = 1, limit = 10, search = '', type } = {}) {
   const { data } = await api.get('/parties', { params: { page, limit, search, type } });
   return data;
