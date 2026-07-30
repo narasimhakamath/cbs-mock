@@ -118,7 +118,7 @@ export async function depositAccountDetailsEnquiry(req, res) {
 
   const { Header: reqHeader, Body: reqBody } = request;
   const { AccountNumber, CIF } = reqBody;
-ACCOUNT_STATUS_CODES
+  ACCOUNT_STATUS_CODES;
   let party;
   let accounts;
 
@@ -149,6 +149,92 @@ ACCOUNT_STATUS_CODES
         TotalNumberOfAccounts: accounts.length,
         IssuerType: null,
         AccountsList: accounts.map((account) => mapAccount(account, party)),
+      },
+      ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
+function buildStatementResponseHeader(reqHeader, status) {
+  return {
+    ...reqHeader,
+    TransactionRefNo: `FAMS-${reqHeader.TransactionRefNo || ''}`,
+    Status: status,
+    EAITimestamp: formatTimestamp(new Date()),
+  };
+}
+
+function statementErrorResponse(res, reqHeader, code, desc) {
+  return res.status(200).json({
+    FullAndMiniStatementRes: {
+      Header: buildStatementResponseHeader(reqHeader, 'S'),
+      Body: {},
+      ReturnStatus: { ReturnCode: code, ReturnDesc: desc },
+    },
+  });
+}
+
+export async function fullAndMiniStatement(req, res) {
+  const request = req.body?.FullAndMiniStatementReq;
+  if (!request?.Header || !request?.Body) {
+    return res.status(400).json({ message: 'FullAndMiniStatementReq.Header and Body are required' });
+  }
+
+  const { Header: reqHeader, Body: reqBody } = request;
+  const { AccountNumber, FromDate, ToDate } = reqBody;
+
+  if (!AccountNumber) {
+    return res.status(400).json({ message: 'AccountNumber is required' });
+  }
+
+  const account = await Account.findById(AccountNumber);
+  if (!account || account.countryCode !== COUNTRY_CODE) {
+    return statementErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'ERROR');
+  }
+
+  const party = await Party.findById(account.partyId);
+  if (!party) {
+    return statementErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'ERROR');
+  }
+
+  const balance = account.balance.toFixed(3);
+
+  res.json({
+    FullAndMiniStatementRes: {
+      Header: buildStatementResponseHeader(reqHeader, 'S'),
+      Body: {
+        BranchName: 'MAIN BRANCH',
+        AccountHoldersName: party.name,
+        AccountNumber: account._id,
+        Address1: null,
+        Address2: null,
+        Address3: party.address || null,
+        City: null,
+        State: null,
+        Country: account.countryCode,
+        Zip: null,
+        Currency: account.currencyCode,
+        OrginationDate: formatDate(account.createdAt),
+        InterestRate: '0.0000',
+        ProductName: `CURRENT ACCOUNT-${account.currencyCode}-NBB`,
+        StatementFromDate: FromDate || '',
+        StatementToDate: ToDate || '',
+        OpeningBalance: balance,
+        ClosingBalance: balance,
+        CurrentBalance: balance,
+        AvailableBalance: balance,
+        TotalCredits: 0,
+        TotalDebits: 0,
+        TotalCreditAmount: '0.000',
+        TotalDebitAmount: '0.000',
+        TotalNumberOfTxns: 0,
+        AccountType: 2,
+        Status: ACCOUNT_STATUS_CODES[account.status] || '00',
+        ODILimit: '0.000',
+        ODIExpiryDate: '00000000',
+        IBANNumber: mockIban(account),
+        TaxRegistrationNumber: '0',
+        AccountStatement: [],
       },
       ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
     },
