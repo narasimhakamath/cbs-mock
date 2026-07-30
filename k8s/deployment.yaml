@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cbs-mock
+  namespace: cbs
   labels:
     app: cbs-mock
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: cbs-mock
-          image: cbs-mock:latest
+          image: cbs:latest
           ports:
             - containerPort: 4000
           envFrom:
