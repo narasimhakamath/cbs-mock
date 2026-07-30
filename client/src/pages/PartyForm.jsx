@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchParty, createParty, updateParty, fetchBanks } from '../api/client';
+import { fetchParty, createParty, updateParty } from '../api/client';
 import FormPage from '../components/FormPage';
-import SearchableSelect from '../components/SearchableSelect';
 import { inputClass, labelClass } from '../components/formStyles';
 
 export default function PartyForm() {
@@ -10,28 +9,24 @@ export default function PartyForm() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [form, setForm] = useState({ name: '', address: '', type: 'CORPORATE', bankId: '' });
-  const [banks, setBanks] = useState([]);
+  const [form, setForm] = useState({ name: '', address: '', type: 'CORPORATE' });
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchBanks({ limit: 100 }).then((res) => setBanks(res.items));
     if (!isEdit) return;
     fetchParty(id).then((party) => {
       setForm({
         name: party.name,
         address: party.address || '',
         type: party.type,
-        bankId: party.bankId?._id || '',
       });
       setLoading(false);
     });
   }, [id, isEdit]);
 
   const set = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  const setValue = (field) => (value) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +42,6 @@ export default function PartyForm() {
   };
 
   const backTo = isEdit ? `/parties/${id}` : '/parties';
-  const bankOptions = banks.map((b) => ({ value: b._id, label: b.name }));
 
   if (loading) return <div className="p-8 text-neutral-400">Loading…</div>;
 
@@ -59,7 +53,6 @@ export default function PartyForm() {
       onSubmit={handleSubmit}
       error={error}
       saving={saving}
-      submitDisabled={!form.bankId}
       submitLabel={isEdit ? 'Save changes' : 'Create party'}
     >
       <div>
@@ -80,14 +73,6 @@ export default function PartyForm() {
           <option value="RETAIL">Retail</option>
         </select>
       </div>
-
-      <SearchableSelect
-        label="Bank"
-        value={form.bankId}
-        onChange={setValue('bankId')}
-        options={bankOptions}
-        placeholder="Select bank"
-      />
 
       <div>
         <label className={labelClass}>Address</label>

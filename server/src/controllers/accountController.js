@@ -4,8 +4,7 @@ import { COUNTRY_CODES, CURRENCY_CODES } from '../config/lookups.js';
 
 const partyPopulate = {
   path: 'partyId',
-  select: 'name bankId',
-  populate: { path: 'bankId', select: 'name institutionId' },
+  select: 'name',
 };
 
 export async function listAccounts(req, res) {

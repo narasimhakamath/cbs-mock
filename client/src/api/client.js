@@ -42,8 +42,8 @@ export async function deleteAccount(id) {
   await api.delete(`/accounts/${id}`);
 }
 
-export async function fetchParties({ page = 1, limit = 10, search = '', type, bankId } = {}) {
-  const { data } = await api.get('/parties', { params: { page, limit, search, type, bankId } });
+export async function fetchParties({ page = 1, limit = 10, search = '', type } = {}) {
+  const { data } = await api.get('/parties', { params: { page, limit, search, type } });
   return data;
 }
 
@@ -69,28 +69,4 @@ export async function deleteParty(id) {
 export async function fetchPartyAccounts(id, { page = 1, limit = 10 } = {}) {
   const { data } = await api.get(`/parties/${id}/accounts`, { params: { page, limit } });
   return data;
-}
-
-export async function fetchBanks({ page = 1, limit = 10, search = '' } = {}) {
-  const { data } = await api.get('/banks', { params: { page, limit, search } });
-  return data;
-}
-
-export async function fetchBank(id) {
-  const { data } = await api.get(`/banks/${id}`);
-  return data;
-}
-
-export async function createBank(payload) {
-  const { data } = await api.post('/banks', payload);
-  return data;
-}
-
-export async function updateBank(id, payload) {
-  const { data } = await api.patch(`/banks/${id}`, payload);
-  return data;
-}
-
-export async function deleteBank(id) {
-  await api.delete(`/banks/${id}`);
 }

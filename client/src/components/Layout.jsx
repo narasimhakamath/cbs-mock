@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import logo from '../assets/logo-all-white.svg';
-import { IconBank, IconParties, IconAccounts, IconMenu } from './icons';
+import { IconParties, IconAccounts, IconMenu } from './icons';
 
 const navItems = [
-  { to: '/banks', label: 'Banks', Icon: IconBank },
   { to: '/parties', label: 'Parties', Icon: IconParties },
   { to: '/accounts', label: 'Accounts', Icon: IconAccounts },
 ];

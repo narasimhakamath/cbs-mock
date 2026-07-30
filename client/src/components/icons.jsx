@@ -1,14 +1,3 @@
-export function IconBank({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>
-      <path d="M3 10.5 12 4l9 6.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4.5 10.5v8M9 10.5v8M15 10.5v8M19.5 10.5v8" strokeLinecap="round" />
-      <path d="M3 20.5h18" strokeLinecap="round" />
-      <path d="M3 10.5h18" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function IconParties({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>

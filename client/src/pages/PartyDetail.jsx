@@ -123,10 +123,6 @@ export default function PartyDetail() {
             </div>
           </div>
           <div className="rounded-xl border border-neutral-200 bg-white p-4">
-            <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">Bank</div>
-            <div className="mt-1 text-base text-neutral-800">{party.bankId?.name || '—'}</div>
-          </div>
-          <div className="rounded-xl border border-neutral-200 bg-white p-4">
             <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">Address</div>
             <div className="mt-1 text-base text-neutral-800">{party.address || '—'}</div>
           </div>

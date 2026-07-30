@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { depositAccountDetailsEnquiry } from '../controllers/nbbController.js';
+import { depositAccountDetailsEnquiry } from '../controllers/nbbBHController.js';
 
 const router = Router();
 

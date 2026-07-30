@@ -6,9 +6,9 @@ import morgan from 'morgan';
 
 import accountsRouter from './routes/accounts.js';
 import partiesRouter from './routes/parties.js';
-import banksRouter from './routes/banks.js';
 import configRouter from './routes/config.js';
-import nbbRoutes from './routes/nbbRoutes.js';
+import nbbAERoutes from './routes/nbbAERoutes.js';
+import nbbBHRoutes from './routes/nbbBHRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,9 +23,9 @@ app.use(morgan('dev'));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/accounts', accountsRouter);
 app.use('/api/parties', partiesRouter);
-app.use('/api/banks', banksRouter);
 app.use('/api/config', configRouter);
-app.use('/api/nbb', nbbRoutes);
+app.use('/api/nbb-ae', nbbAERoutes);
+app.use('/api/nbb-bh', nbbBHRoutes);
 
 app.use(express.static(clientDist));
 app.get(/^\/(?!api\/).*/, (req, res) => {

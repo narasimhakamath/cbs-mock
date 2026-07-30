@@ -43,7 +43,6 @@ export default function AccountDetail() {
 
   const countryName = config.countries.find((c) => c.code === account.countryCode)?.name;
   const currencyName = config.currencies.find((c) => c.code === account.currencyCode)?.name;
-  const bankName = account.partyId?.bankId?.name;
 
   return (
     <div className="p-8">
@@ -73,7 +72,6 @@ export default function AccountDetail() {
       </div>
 
       <div className="mb-1 text-sm text-neutral-500">
-        {bankName && `${bankName} · `}
         <Link to={`/parties/${account.partyId?._id}`} className="text-neutral-700 hover:underline">
           {account.partyId?.name}
         </Link>

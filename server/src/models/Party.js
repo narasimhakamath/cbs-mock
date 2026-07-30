@@ -20,11 +20,6 @@ const partySchema = new mongoose.Schema(
       enum: ['CORPORATE', 'RETAIL'],
       required: true,
     },
-    bankId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Bank',
-      required: true,
-    },
     status: {
       type: String,
       enum: ['ACTIVE', 'INACTIVE'],

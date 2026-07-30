@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchParties, deleteParty, fetchBanks } from '../api/client';
+import { fetchParties, deleteParty } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
-import SearchableSelect from '../components/SearchableSelect';
 
 const TYPE_FILTERS = [
   { value: '', label: 'All types' },
@@ -19,25 +18,19 @@ export default function PartiesList() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
-  const [bankId, setBankId] = useState('');
-  const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteError, setDeleteError] = useState('');
 
-  useEffect(() => {
-    fetchBanks({ limit: 100 }).then((res) => setBanks(res.items));
-  }, []);
-
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchParties({ page, limit, search, type, bankId: bankId || undefined });
+      const result = await fetchParties({ page, limit, search, type });
       setData(result);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, type, bankId]);
+  }, [page, limit, search, type]);
 
   useEffect(() => {
     load();
@@ -53,8 +46,6 @@ export default function PartiesList() {
       setDeleteError(err?.response?.data?.message || 'Could not delete party');
     }
   };
-
-  const bankOptions = [{ value: '', label: 'All banks' }, ...banks.map((b) => ({ value: b._id, label: b.name }))];
 
   return (
     <div className="p-8">
@@ -92,17 +83,6 @@ export default function PartiesList() {
             </option>
           ))}
         </select>
-        <div className="w-52">
-          <SearchableSelect
-            value={bankId}
-            onChange={(v) => {
-              setPage(1);
-              setBankId(v);
-            }}
-            options={bankOptions}
-            placeholder="All banks"
-          />
-        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
@@ -112,7 +92,6 @@ export default function PartiesList() {
               <th className="px-6 py-3 font-medium">Party ID</th>
               <th className="px-6 py-3 font-medium">Name</th>
               <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium">Bank</th>
               <th className="px-6 py-3 font-medium">Accounts</th>
               <th className="px-6 py-3 font-medium">Status</th>
               <th className="px-6 py-3 font-medium"></th>
@@ -121,14 +100,14 @@ export default function PartiesList() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && data.items.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
                   No parties found
                 </td>
               </tr>
@@ -145,7 +124,6 @@ export default function PartiesList() {
                   <td className="px-6 py-3 text-neutral-600">
                     {party.type === 'CORPORATE' ? 'Corporate' : 'Retail'}
                   </td>
-                  <td className="px-6 py-3 text-neutral-600">{party.bankId?.name}</td>
                   <td className="px-6 py-3 text-neutral-600">{party.accountCount}</td>
                   <td className="px-6 py-3">
                     <StatusBadge status={party.status} />

@@ -19,6 +19,8 @@ function mockIban(account) {
   return `${account.countryCode}00NBB0${account._id}`;
 }
 
+const COUNTRY_CODE = 'AE';
+
 const ACCOUNT_STATUS_CODES = { ACTIVE: '00', INACTIVE: '01', SUSPENDED: '02' };
 const CUSTOMER_CATEGORY_CODES = { RETAIL: '01', CORPORATE: '02' };
 
@@ -123,13 +125,15 @@ ACCOUNT_STATUS_CODES
   if (CIF) {
     party = await Party.findById(CIF);
     if (!party) return errorResponse(res, reqHeader, CIF, 'EAI-BANCS-001', 'ERROR');
-    accounts = await Account.find({ partyId: party._id });
+    accounts = await Account.find({ partyId: party._id, countryCode: COUNTRY_CODE });
   } else if (AccountNumber) {
     const account = await Account.findById(AccountNumber);
-    if (!account) return errorResponse(res, reqHeader, '', 'EAI-BANCS-001', 'ERROR');
+    if (!account || account.countryCode !== COUNTRY_CODE) {
+      return errorResponse(res, reqHeader, '', 'EAI-BANCS-001', 'ERROR');
+    }
     party = await Party.findById(account.partyId);
     if (!party) return errorResponse(res, reqHeader, '', 'EAI-BANCS-001', 'ERROR');
-    accounts = await Account.find({ partyId: party._id });
+    accounts = await Account.find({ partyId: party._id, countryCode: COUNTRY_CODE });
   } else {
     return res.status(400).json({ message: 'AccountNumber or CIF is required' });
   }
