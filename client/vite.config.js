@@ -7,7 +7,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://localhost:4000',
+      '/cbs/api': {
+        target: 'http://localhost:4000',
+        rewrite: (path) => path.replace(/^\/cbs/, ''),
+      },
     },
   },
 })
