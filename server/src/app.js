@@ -25,7 +25,7 @@ app.use('/api/accounts', accountsRouter);
 app.use('/api/parties', partiesRouter);
 app.use('/api/banks', banksRouter);
 app.use('/api/config', configRouter);
-app.use('/cbs/api/nbb', nbbRoutes);
+app.use('/api/nbb', nbbRoutes);
 
 app.use(express.static(clientDist));
 app.get(/^\/(?!api\/).*/, (req, res) => {
