@@ -1,5 +1,8 @@
+import crypto from 'crypto';
 import Account from '../models/Account.js';
 import Party from '../models/Party.js';
+import { mockFxRate } from '../utils/fxRate.js';
+import { uuidv7 } from '../utils/uuid.js';
 
 function pad(n, len) {
   return String(n).padStart(len, '0');
@@ -237,6 +240,81 @@ export async function fullAndMiniStatement(req, res) {
         AccountStatement: [],
       },
       ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
+function formatFxTimestamp(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}${pad(d.getMonth() + 1, 2)}${pad(d.getDate(), 2)}-${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}:${pad(d.getSeconds(), 2)}.${pad(d.getMilliseconds(), 3)}`;
+}
+
+function generateEaiTrackingId() {
+  return `${crypto.randomBytes(16).toString('hex')}${'0'.repeat(43)}`.slice(0, 67);
+}
+
+function generateQuoteId() {
+  return `${crypto.randomInt(100000, 999999)}-${crypto.randomBytes(6).toString('hex')}`;
+}
+
+export async function quoteRequest(req, res) {
+  const request = req.body?.QuoteRequest;
+  if (!request?.Header || !request?.Body?.QuoteRequest) {
+    return res.status(400).json({ message: 'QuoteRequest.Header and Body.QuoteRequest are required' });
+  }
+
+  const { Header: reqHeader, Body: reqBody } = request;
+  const quoteReq = reqBody.QuoteRequest;
+  const instrument = quoteReq.Instrument || {};
+  const leg = (instrument.InstrumentLeg || [])[0] || {};
+  const party = (quoteReq.Parties || [])[0] || {};
+
+  const symbol = leg.LegSymbol || instrument.Symbol;
+  const currency = symbol ? symbol.split('/')[0] : instrument.Currency;
+  const offerSpotRate = mockFxRate(symbol);
+  const now = new Date();
+  const validUntil = new Date(now.getTime() + 60 * 1000);
+
+  res.json({
+    QuoteResponse: {
+      Header: {
+        ...reqHeader,
+        SrcAppTimestamp: formatTimestamp(now),
+        EAITrackingID: generateEaiTrackingId(),
+        Status: 'S',
+        EAITimestamp: formatTimestamp(now),
+      },
+      Body: {
+        Quote: {
+          QuoteReqID: quoteReq.QuoteReqID || uuidv7(),
+          QuoteID: generateQuoteId(),
+          NoPartyIDs: quoteReq.NoPartyIDs,
+          Parties: {
+            PartyID: party.PartyID,
+            PartyIDSource: party.PartyIDSource,
+            PartyRole: party.PartyRole != null ? String(party.PartyRole) : undefined,
+          },
+          Symbol: symbol,
+          CFICode: instrument.CFICode,
+          Currency: currency,
+          NoLegs: instrument.NoLegs,
+          InstrumentLeg: {
+            LegSymbol: leg.LegSymbol,
+            LegOrderQty: leg.LegOrderQty,
+            LegTenorValue: null,
+            LegSettlDate: leg.LegSettlDate,
+            LegPriceType: '2',
+            LegBidPx: null,
+            LegOfferPx: String(offerSpotRate),
+            MidPx: null,
+          },
+          ValidUntilTime: formatFxTimestamp(validUntil),
+          BidSpotRate: null,
+          TransactTime: formatFxTimestamp(now),
+          OfferSpotRate: String(offerSpotRate),
+        },
+      },
+      ReturnStatus: { ReturnCode: 'EAI-TSY-000', ReturnDesc: 'SUCCESS' },
     },
   });
 }
