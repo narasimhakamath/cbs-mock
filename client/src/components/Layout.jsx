@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import logo from '../assets/logo-all-white.svg';
-import { IconParties, IconAccounts, IconMenu } from './icons';
+import { IconParties, IconAccounts, IconTransactions, IconMenu } from './icons';
+import { useEnvironment, ENVIRONMENTS } from '../context/EnvironmentContext';
 
 const navItems = [
   { to: '/parties', label: 'Parties', Icon: IconParties },
   { to: '/accounts', label: 'Accounts', Icon: IconAccounts },
+  { to: '/transactions', label: 'Transactions', Icon: IconTransactions },
 ];
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const { environment, setEnvironment } = useEnvironment();
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
@@ -53,6 +56,22 @@ export default function Layout() {
         {!collapsed && <div className="px-5 py-4 text-xs text-neutral-500">CBS Mock by VAM</div>}
       </aside>
       <main className="flex-1 min-w-0">
+        <div className="flex justify-end border-b border-neutral-200 bg-white px-8 py-3">
+          <label className="flex items-center gap-2 text-xs font-medium text-neutral-500">
+            Environment
+            <select
+              value={environment}
+              onChange={(e) => setEnvironment(e.target.value)}
+              className="rounded-md border border-neutral-300 px-2 py-1 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-400"
+            >
+              {ENVIRONMENTS.map((env) => (
+                <option key={env.value} value={env.value}>
+                  {env.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <Outlet />
       </main>
     </div>

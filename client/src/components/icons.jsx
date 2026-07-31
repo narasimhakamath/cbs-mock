@@ -19,6 +19,15 @@ export function IconAccounts({ className }) {
   );
 }
 
+export function IconTransactions({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>
+      <path d="M4 8h13M17 8l-3-3M17 8l-3 3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 16H7M7 16l3-3M7 16l3 3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconMenu({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>

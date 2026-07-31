@@ -47,6 +47,19 @@ export async function fetchTransactions(accountId, { page = 1, limit = 10 } = {}
   return data;
 }
 
+export async function fetchAllTransactions({ page = 1, limit = 10, search = '' } = {}) {
+  const { data } = await api.get('/transactions', { params: { page, limit, search } });
+  return data;
+}
+
+export async function resolvePhysicalAccount(accountId, env, creditAmount) {
+  const { data, status } = await api.get('/physical-accounts/resolve', {
+    params: { accountId, env, creditAmount },
+    validateStatus: () => true,
+  });
+  return { ok: status >= 200 && status < 300, status, data };
+}
+
 export async function createInwardCredit(accountId, payload) {
   const { data } = await api.post(`/accounts/${accountId}/transactions/inward-credit`, payload);
   return data;

@@ -2,6 +2,32 @@ import Account from '../models/Account.js';
 import Transaction from '../models/Transaction.js';
 import { COUNTRY_CODES, CURRENCY_CODES } from '../config/lookups.js';
 
+export async function listAllTransactions(req, res) {
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
+  const search = (req.query.search || '').trim();
+
+  const filter = search
+    ? {
+        $or: [
+          { _id: { $regex: search, $options: 'i' } },
+          { accountNumber: { $regex: search, $options: 'i' } },
+          { counterpartyAccountNumber: { $regex: search, $options: 'i' } },
+        ],
+      }
+    : {};
+
+  const [items, total] = await Promise.all([
+    Transaction.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Transaction.countDocuments(filter),
+  ]);
+
+  res.json({ items, page, limit, total, totalPages: Math.max(Math.ceil(total / limit), 1) });
+}
+
 export async function listTransactions(req, res) {
   const account = await Account.findById(req.params.id);
   if (!account) return res.status(404).json({ message: 'Account not found' });

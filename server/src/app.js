@@ -6,6 +6,8 @@ import morgan from 'morgan';
 
 import accountsRouter from './routes/accounts.js';
 import partiesRouter from './routes/parties.js';
+import transactionsRouter from './routes/transactions.js';
+import physicalAccountsRouter from './routes/physicalAccounts.js';
 import configRouter from './routes/config.js';
 import nbbAERoutes from './routes/nbbAERoutes.js';
 import nbbBHRoutes from './routes/nbbBHRoutes.js';
@@ -23,6 +25,8 @@ app.use(morgan('dev'));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/accounts', accountsRouter);
 app.use('/api/parties', partiesRouter);
+app.use('/api/transactions', transactionsRouter);
+app.use('/api/physical-accounts', physicalAccountsRouter);
 app.use('/api/config', configRouter);
 app.use('/api/nbb-ae', nbbAERoutes);
 app.use('/api/nbb-bh', nbbBHRoutes);
