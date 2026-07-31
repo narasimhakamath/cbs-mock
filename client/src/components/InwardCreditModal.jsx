@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { inputClass, labelClass } from './formStyles';
-import { resolvePhysicalAccount, fetchAccount, createInwardCredit } from '../api/client';
+import { resolvePhysicalAccount, fetchAccount, createInwardCredit, postVamCredit } from '../api/client';
 import { useEnvironment } from '../context/EnvironmentContext';
 
 function generateAccountNumber() {
@@ -18,12 +18,14 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
   const [cbsAccount, setCbsAccount] = useState(null);
+  const [vaInfo, setVaInfo] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     setCheckError('');
     setCbsAccount(null);
+    setVaInfo(null);
 
     const trimmedId = accountId.trim();
     if (!trimmedId || !amount || Number(amount) <= 0) return;
@@ -62,6 +64,11 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
             return;
           }
           setCbsAccount(account);
+          setVaInfo({
+            virtualAccountId: trimmedId,
+            ledgerId: data.ledgerId,
+            currency: data.account.currency,
+          });
         } catch {
           setCheckError(`The resolved physical account (${accountNumber}) does not exist`);
         }
@@ -81,11 +88,33 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
     setSubmitError('');
     setSubmitting(true);
     try {
-      await createInwardCredit(cbsAccount._id, {
+      const transaction = await createInwardCredit(cbsAccount._id, {
         sourceAccountNumber: sourceAccountNumber.trim(),
         amount: Number(amount),
         currencyCode: cbsAccount.currencyCode,
       });
+
+      if (vaInfo) {
+        const { ok, data } = await postVamCredit({
+          env: environment,
+          externalRefId: transaction.transactionId,
+          transactionReferenceId: transaction.transactionId,
+          accountId: vaInfo.virtualAccountId,
+          ledgerId: vaInfo.ledgerId,
+          currency: vaInfo.currency,
+          amount: Number(amount),
+        });
+        if (!ok) {
+          setSubmitError(
+            `Physical account was credited, but the virtual account credit failed: ${
+              data?.message || 'unknown error'
+            }`
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
+
       onSuccess?.();
     } catch (err) {
       setSubmitError(err?.response?.data?.message || 'Something went wrong');
@@ -146,7 +175,7 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
         {!checking && cbsAccount && (
           <p className="text-sm text-emerald-600">
             Account: <span className="font-mono font-medium">{cbsAccount.accountNumber}</span> is
-            active and ready to credit.
+            valid
           </p>
         )}
 

@@ -1,7 +1,4 @@
-const ENVIRONMENTS = {
-  DEV: { baseUrl: process.env.DFL_DEV_BASE_URL, token: process.env.DFL_DEV_AUTH_TOKEN },
-  QA: { baseUrl: process.env.DFL_QA_BASE_URL, token: process.env.DFL_QA_AUTH_TOKEN },
-};
+import { DFL_ENVIRONMENTS } from '../config/dflEnvironments.js';
 
 export async function resolvePhysicalAccount(req, res) {
   const accountId = (req.query.accountId || '').trim();
@@ -10,7 +7,7 @@ export async function resolvePhysicalAccount(req, res) {
   }
 
   const env = (req.query.env || '').toUpperCase();
-  const target = ENVIRONMENTS[env];
+  const target = DFL_ENVIRONMENTS[env];
   if (!target) {
     return res.status(400).json({ message: 'env must be one of DEV, QA' });
   }

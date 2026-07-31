@@ -60,6 +60,13 @@ export async function resolvePhysicalAccount(accountId, env, creditAmount) {
   return { ok: status >= 200 && status < 300, status, data };
 }
 
+export async function postVamCredit(payload) {
+  const { data, status } = await api.post('/vam-transactions/credit', payload, {
+    validateStatus: () => true,
+  });
+  return { ok: status >= 200 && status < 300, status, data };
+}
+
 export async function createInwardCredit(accountId, payload) {
   const { data } = await api.post(`/accounts/${accountId}/transactions/inward-credit`, payload);
   return data;
