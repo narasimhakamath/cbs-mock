@@ -61,12 +61,6 @@ export default function AccountDetail() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowTransaction(true)}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            New transaction
-          </button>
-          <button
             onClick={() => navigate(`/accounts/${id}/edit`)}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
           >
@@ -111,37 +105,36 @@ export default function AccountDetail() {
             <thead>
               <tr className="border-b border-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-400">
                 <th className="px-6 py-2 font-medium">Transaction ID</th>
-                <th className="px-6 py-2 font-medium">Type</th>
-                <th className="px-6 py-2 font-medium">Counterparty</th>
+                <th className="px-6 py-2 font-medium">Source account</th>
+                <th className="px-6 py-2 font-medium">Beneficiary account</th>
                 <th className="px-6 py-2 font-medium text-right">Amount</th>
                 <th className="px-6 py-2 font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((txn) => (
-                <tr key={txn.transactionId} className="border-b border-neutral-50 last:border-0">
-                  <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.transactionId}</td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={
-                        txn.direction === 'INWARD_CREDIT' ? 'text-emerald-600' : 'text-red-600'
-                      }
+              {transactions.map((txn) => {
+                const isCredit = txn.direction === 'INWARD_CREDIT';
+                const sourceAccount = isCredit ? txn.counterpartyAccountNumber : txn.accountNumber;
+                const beneficiaryAccount = isCredit ? txn.accountNumber : txn.counterpartyAccountNumber;
+                return (
+                  <tr key={txn.transactionId} className="border-b border-neutral-50 last:border-0">
+                    <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.transactionId}</td>
+                    <td className="px-6 py-3 font-mono text-xs text-neutral-600">{sourceAccount}</td>
+                    <td className="px-6 py-3 font-mono text-xs text-neutral-600">{beneficiaryAccount}</td>
+                    <td
+                      className={`px-6 py-3 text-right font-medium ${
+                        isCredit ? 'text-emerald-600' : 'text-red-600'
+                      }`}
                     >
-                      {txn.direction === 'INWARD_CREDIT' ? 'Inward credit' : 'Outward debit'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 font-mono text-xs text-neutral-600">
-                    {txn.counterpartyAccountNumber}
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    {txn.direction === 'INWARD_CREDIT' ? '+' : '−'}
-                    {formatAmount(txn.amount, txn.currencyCode)}
-                  </td>
-                  <td className="px-6 py-3 text-neutral-500">
-                    {new Date(txn.createdAt).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
+                      {isCredit ? '+' : '−'}
+                      {formatAmount(txn.amount, txn.currencyCode)}
+                    </td>
+                    <td className="px-6 py-3 text-neutral-500">
+                      {new Date(txn.createdAt).toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

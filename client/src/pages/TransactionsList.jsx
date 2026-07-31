@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import { fetchAllTransactions } from '../api/client';
+import { Link } from 'react-router-dom';
+import { fetchAllTransactions, fetchAccounts } from '../api/client';
 import Pagination from '../components/Pagination';
 import InwardCreditModal from '../components/InwardCreditModal';
+import OutwardDebitModal from '../components/OutwardDebitModal';
 import { formatAmount } from '../utils/currency';
 
 export default function TransactionsList() {
@@ -11,6 +13,8 @@ export default function TransactionsList() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showInwardCredit, setShowInwardCredit] = useState(false);
+  const [showOutwardDebit, setShowOutwardDebit] = useState(false);
+  const [knownAccounts, setKnownAccounts] = useState(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -26,16 +30,30 @@ export default function TransactionsList() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    fetchAccounts({ limit: 100 }).then((result) => {
+      setKnownAccounts(new Set(result.items.map((a) => a.accountNumber)));
+    });
+  }, []);
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-neutral-800">Transactions</h1>
-        <button
-          onClick={() => setShowInwardCredit(true)}
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-        >
-          + Inward credit
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowOutwardDebit(true)}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            + Outbound Transaction
+          </button>
+          <button
+            onClick={() => setShowInwardCredit(true)}
+            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          >
+            + Inbound Transaction
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex items-center gap-3">
@@ -87,8 +105,12 @@ export default function TransactionsList() {
                     className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
                   >
                     <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.transactionId}</td>
-                    <td className="px-6 py-3 font-mono text-neutral-600">{sourceAccount}</td>
-                    <td className="px-6 py-3 font-mono text-neutral-600">{beneficiaryAccount}</td>
+                    <td className="px-6 py-3 font-mono text-neutral-600">
+                      {renderAccountCell(sourceAccount, knownAccounts)}
+                    </td>
+                    <td className="px-6 py-3 font-mono text-neutral-600">
+                      {renderAccountCell(beneficiaryAccount, knownAccounts)}
+                    </td>
                     <td
                       className={`px-6 py-3 text-right font-medium ${
                         isCredit ? 'text-emerald-600' : 'text-red-600'
@@ -127,6 +149,27 @@ export default function TransactionsList() {
           }}
         />
       )}
+
+      {showOutwardDebit && (
+        <OutwardDebitModal
+          onClose={() => setShowOutwardDebit(false)}
+          onSuccess={() => {
+            setShowOutwardDebit(false);
+            load();
+          }}
+        />
+      )}
     </div>
   );
+}
+
+function renderAccountCell(accountNumber, knownAccounts) {
+  if (knownAccounts.has(accountNumber)) {
+    return (
+      <Link to={`/accounts/${accountNumber}`} className="text-neutral-800 hover:underline">
+        {accountNumber}
+      </Link>
+    );
+  }
+  return accountNumber;
 }

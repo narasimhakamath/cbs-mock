@@ -89,16 +89,38 @@ export async function createOutwardDebit(req, res) {
   if (!beneficiaryAccountNumber || !String(beneficiaryAccountNumber).trim()) {
     return res.status(400).json({ message: 'beneficiaryAccountNumber is required' });
   }
-  if (!beneficiaryCountryCode || !COUNTRY_CODES.includes(beneficiaryCountryCode.toUpperCase())) {
-    return res.status(400).json({ message: 'beneficiaryCountryCode must be a valid ISO country code' });
+  const trimmedBeneficiary = String(beneficiaryAccountNumber).trim();
+  if (trimmedBeneficiary === account._id) {
+    return res.status(400).json({ message: 'beneficiaryAccountNumber cannot be the same as the source account' });
   }
-  if (!beneficiaryCurrencyCode || !CURRENCY_CODES.includes(beneficiaryCurrencyCode.toUpperCase())) {
-    return res.status(400).json({ message: 'beneficiaryCurrencyCode must be a valid ISO currency code' });
-  }
+
   const value = parseAmount(amount);
   if (value === null) return res.status(400).json({ message: 'amount must be a positive number' });
   if (value > account.balance) {
     return res.status(400).json({ message: 'Insufficient balance' });
+  }
+
+  // Beneficiary may or may not exist in this CBS instance.
+  const beneficiaryAccount = await Account.findById(trimmedBeneficiary);
+
+  let counterpartyCountryCode;
+  let counterpartyCurrencyCode;
+
+  if (beneficiaryAccount) {
+    if (beneficiaryAccount.status !== 'ACTIVE') {
+      return res.status(400).json({ message: `Beneficiary account ${trimmedBeneficiary} is not active` });
+    }
+    counterpartyCountryCode = beneficiaryAccount.countryCode;
+    counterpartyCurrencyCode = beneficiaryAccount.currencyCode;
+  } else {
+    if (!beneficiaryCountryCode || !COUNTRY_CODES.includes(beneficiaryCountryCode.toUpperCase())) {
+      return res.status(400).json({ message: 'beneficiaryCountryCode must be a valid ISO country code' });
+    }
+    if (!beneficiaryCurrencyCode || !CURRENCY_CODES.includes(beneficiaryCurrencyCode.toUpperCase())) {
+      return res.status(400).json({ message: 'beneficiaryCurrencyCode must be a valid ISO currency code' });
+    }
+    counterpartyCountryCode = beneficiaryCountryCode.toUpperCase();
+    counterpartyCurrencyCode = beneficiaryCurrencyCode.toUpperCase();
   }
 
   account.balance -= value;
@@ -108,10 +130,23 @@ export async function createOutwardDebit(req, res) {
     accountNumber: account._id,
     direction: 'OUTWARD_DEBIT',
     amount: value,
-    currencyCode: beneficiaryCurrencyCode.toUpperCase(),
-    counterpartyAccountNumber: String(beneficiaryAccountNumber).trim(),
-    counterpartyCountryCode: beneficiaryCountryCode.toUpperCase(),
+    currencyCode: counterpartyCurrencyCode,
+    counterpartyAccountNumber: trimmedBeneficiary,
+    counterpartyCountryCode,
   });
+
+  if (beneficiaryAccount) {
+    beneficiaryAccount.balance += value;
+    await beneficiaryAccount.save();
+
+    await Transaction.create({
+      accountNumber: beneficiaryAccount._id,
+      direction: 'INWARD_CREDIT',
+      amount: value,
+      currencyCode: counterpartyCurrencyCode,
+      counterpartyAccountNumber: account._id,
+    });
+  }
 
   res.status(201).json(transaction);
 }
