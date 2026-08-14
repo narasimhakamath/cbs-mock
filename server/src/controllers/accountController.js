@@ -11,7 +11,7 @@ export async function listAccounts(req, res) {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
   const search = (req.query.search || '').trim();
-  const { partyId } = req.query;
+  const partyId = req.params.partyId || req.query.partyId;
 
   const filter = {};
   if (partyId) filter.partyId = partyId;

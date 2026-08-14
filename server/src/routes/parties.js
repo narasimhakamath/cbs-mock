@@ -16,7 +16,7 @@ router.post('/', createParty);
 router.patch('/:id', updateParty);
 router.delete('/:id', deleteParty);
 router.get('/:id/accounts', (req, res) => {
-  req.query.partyId = req.params.id;
+  req.params.partyId = req.params.id;
   return listAccounts(req, res);
 });
 
