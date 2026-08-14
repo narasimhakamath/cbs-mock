@@ -3,6 +3,8 @@ import Account from '../models/Account.js';
 import Party from '../models/Party.js';
 import { mockFxRate } from '../utils/fxRate.js';
 import { uuidv7 } from '../utils/uuid.js';
+import { PURPOSE_CODES_LIST } from '../config/purposeCodes.js';
+import { buildNbbAccountStatement } from '../utils/nbbStatement.js';
 
 function pad(n, len) {
   return String(n).padStart(len, '0');
@@ -184,7 +186,7 @@ export async function fullAndMiniStatement(req, res) {
   }
 
   const { Header: reqHeader, Body: reqBody } = request;
-  const { AccountNumber, FromDate, ToDate } = reqBody;
+  const { AccountNumber, FromDate, ToDate, OrderBy } = reqBody;
 
   if (!AccountNumber) {
     return res.status(400).json({ message: 'AccountNumber is required' });
@@ -201,6 +203,7 @@ export async function fullAndMiniStatement(req, res) {
   }
 
   const balance = account.balance.toFixed(3);
+  const statement = await buildNbbAccountStatement(account, FromDate, ToDate, OrderBy);
 
   res.json({
     FullAndMiniStatementRes: {
@@ -222,22 +225,22 @@ export async function fullAndMiniStatement(req, res) {
         ProductName: `CURRENT ACCOUNT-${account.currencyCode}-NBB`,
         StatementFromDate: FromDate || '',
         StatementToDate: ToDate || '',
-        OpeningBalance: balance,
-        ClosingBalance: balance,
+        OpeningBalance: statement.OpeningBalance,
+        ClosingBalance: statement.ClosingBalance,
         CurrentBalance: balance,
         AvailableBalance: balance,
-        TotalCredits: 0,
-        TotalDebits: 0,
-        TotalCreditAmount: '0.000',
-        TotalDebitAmount: '0.000',
-        TotalNumberOfTxns: 0,
+        TotalCredits: statement.TotalCredits,
+        TotalDebits: statement.TotalDebits,
+        TotalCreditAmount: statement.TotalCreditAmount,
+        TotalDebitAmount: statement.TotalDebitAmount,
+        TotalNumberOfTxns: statement.TotalNumberOfTxns,
         AccountType: 2,
         Status: ACCOUNT_STATUS_CODES[account.status] || '00',
         ODILimit: '0.000',
         ODIExpiryDate: '00000000',
         IBANNumber: mockIban(account),
         TaxRegistrationNumber: '0',
-        AccountStatement: [],
+        AccountStatement: statement.AccountStatement,
       },
       ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
     },
@@ -315,6 +318,32 @@ export async function quoteRequest(req, res) {
         },
       },
       ReturnStatus: { ReturnCode: 'EAI-TSY-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
+export async function purposeCodeForCountry(req, res) {
+  const request = req.body?.PurposeCodeForCountryReq;
+  if (!request?.Header || !request?.Body) {
+    return res.status(400).json({ message: 'PurposeCodeForCountryReq.Header and Body are required' });
+  }
+
+  const { Header: reqHeader } = request;
+  const now = new Date();
+
+  res.json({
+    PurposeCodeForCountryRes: {
+      Header: {
+        ...reqHeader,
+        SrcAppTimestamp: formatTimestamp(now),
+        EAITrackingID: null,
+        Status: 'S',
+        EAITimestamp: formatTimestamp(now),
+      },
+      Body: {
+        PurposeCodesList: PURPOSE_CODES_LIST,
+      },
+      ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
     },
   });
 }
