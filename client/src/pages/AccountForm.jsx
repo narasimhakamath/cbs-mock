@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAccount, createAccount, updateAccount, fetchConfig, fetchParties } from '../api/client';
+import { fetchAccount, createAccount, updateAccount, fetchConfig, fetchParties, fetchParty } from '../api/client';
 import FormPage from '../components/FormPage';
 import SearchableSelect from '../components/SearchableSelect';
 import { inputClass, labelClass } from '../components/formStyles';
@@ -55,7 +55,9 @@ export default function AccountForm() {
         setLockedParty(account.partyId);
         setLoading(false);
       });
-    } else if (!lockedPartyId) {
+    } else if (lockedPartyId) {
+      fetchParty(lockedPartyId).then(setLockedParty);
+    } else {
       fetchParties({ limit: 100 }).then((res) => setParties(res.items));
     }
   }, [id, isEdit, lockedPartyId]);
