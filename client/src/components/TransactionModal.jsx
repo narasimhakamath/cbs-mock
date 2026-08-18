@@ -182,7 +182,7 @@ export default function TransactionModal({ accountId, account, config, onClose, 
           <button
             type="submit"
             disabled={saving || submitDisabled}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? 'Submitting…' : isInward ? 'Credit account' : 'Debit account'}
           </button>
