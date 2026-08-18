@@ -49,7 +49,7 @@ export default function TransactionsList() {
           </button>
           <button
             onClick={() => setShowInwardCredit(true)}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             + Inbound Transaction
           </button>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import logo from '../assets/logo-all-white.svg';
+import logo from '../assets/logo-all-white.png';
 import { IconParties, IconAccounts, IconTransactions, IconMenu } from './icons';
 import { useEnvironment, ENVIRONMENTS } from '../context/EnvironmentContext';
 
@@ -17,14 +17,14 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <aside
-        className={`shrink-0 bg-black text-neutral-300 flex flex-col transition-all duration-200 ${
+        className={`shrink-0 bg-primary text-neutral-300 flex flex-col transition-all duration-200 ${
           collapsed ? 'w-20' : 'w-60'
         }`}
       >
         <div className={`flex items-center gap-2 px-3 py-6 ${collapsed ? 'justify-center' : ''}`}>
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-100"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-white/10 hover:text-neutral-100"
           >
             <IconMenu className="h-5 w-5" />
           </button>
@@ -42,8 +42,8 @@ export default function Layout() {
                   collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3 py-2'
                 } ${
                   isActive
-                    ? 'bg-neutral-800 text-white'
-                    : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-100'
+                    ? 'bg-white/10 text-white'
+                    : 'text-neutral-400 hover:bg-white/10 hover:text-neutral-100'
                 }`
               }
             >

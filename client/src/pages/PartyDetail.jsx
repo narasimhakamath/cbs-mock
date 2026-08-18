@@ -135,7 +135,7 @@ export default function PartyDetail() {
             <span className="text-sm font-medium text-neutral-700">Accounts ({accounts.total})</span>
             <button
               onClick={() => navigate(`/accounts/new?partyId=${id}`)}
-              className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800"
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90"
             >
               + Create account
             </button>
