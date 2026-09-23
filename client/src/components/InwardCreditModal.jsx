@@ -97,7 +97,7 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
       if (vaInfo) {
         const { ok, data } = await postVamCredit({
           env: environment,
-          externalRefId: transaction.transactionId,
+          externalRefId: transaction.utrId,
           transactionReferenceId: transaction.transactionId,
           accountId: vaInfo.virtualAccountId,
           ledgerId: vaInfo.ledgerId,

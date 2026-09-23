@@ -384,7 +384,7 @@ export async function fundTransfer(req, res) {
   debitAccount.balance -= amount;
   await debitAccount.save();
 
-  await Transaction.create({
+  const debitTransaction = await Transaction.create({
     accountNumber: debitAccount._id,
     direction: 'OUTWARD_DEBIT',
     amount,
@@ -414,7 +414,7 @@ export async function fundTransfer(req, res) {
     FundTransferRes: {
       Header: buildFundTransferResponseHeader(reqHeader, 'S'),
       Body: {
-        ExternalReferenceNumber: generateReferenceNumber(),
+        ExternalReferenceNumber: debitTransaction.utrId,
         InternalReferenceNumber: generateReferenceNumber(),
         SourceRefNumber: SendersReference || '',
         SupervisorOverrideCode: '',

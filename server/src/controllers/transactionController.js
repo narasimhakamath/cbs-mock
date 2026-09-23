@@ -11,6 +11,7 @@ export async function listAllTransactions(req, res) {
     ? {
         $or: [
           { _id: { $regex: search, $options: 'i' } },
+          { utrId: { $regex: search, $options: 'i' } },
           { accountNumber: { $regex: search, $options: 'i' } },
           { counterpartyAccountNumber: { $regex: search, $options: 'i' } },
         ],

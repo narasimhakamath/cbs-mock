@@ -75,7 +75,7 @@ export default function TransactionsList() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-400">
-              <th className="px-6 py-3 font-medium">Transaction ID</th>
+              <th className="px-6 py-3 font-medium">UTR ID</th>
               <th className="px-6 py-3 font-medium">Source account</th>
               <th className="px-6 py-3 font-medium">Beneficiary account</th>
               <th className="px-6 py-3 font-medium text-right">Amount</th>
@@ -109,7 +109,7 @@ export default function TransactionsList() {
                     key={txn.transactionId}
                     className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
                   >
-                    <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.transactionId}</td>
+                    <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.utrId}</td>
                     <td className="px-6 py-3 font-mono text-neutral-600">
                       {renderAccountCell(sourceAccount, knownAccounts)}
                     </td>

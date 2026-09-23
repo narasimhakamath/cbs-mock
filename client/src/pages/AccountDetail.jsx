@@ -107,7 +107,7 @@ export default function AccountDetail() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-400">
-                <th className="px-6 py-2 font-medium">Transaction ID</th>
+                <th className="px-6 py-2 font-medium">UTR ID</th>
                 <th className="px-6 py-2 font-medium">Source account</th>
                 <th className="px-6 py-2 font-medium">Beneficiary account</th>
                 <th className="px-6 py-2 font-medium text-right">Amount</th>
@@ -123,7 +123,7 @@ export default function AccountDetail() {
                 const beneficiaryAccount = isCredit ? txn.accountNumber : txn.counterpartyAccountNumber;
                 return (
                   <tr key={txn.transactionId} className="border-b border-neutral-50 last:border-0">
-                    <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.transactionId}</td>
+                    <td className="px-6 py-3 font-mono text-xs text-neutral-500">{txn.utrId}</td>
                     <td className="px-6 py-3 font-mono text-xs text-neutral-600">{sourceAccount}</td>
                     <td className="px-6 py-3 font-mono text-xs text-neutral-600">{beneficiaryAccount}</td>
                     <td

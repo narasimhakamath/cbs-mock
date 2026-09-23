@@ -33,7 +33,7 @@ export default function AcknowledgeTransactionModal({ transaction, onClose, onSu
 
     const vam = await postVamStatusAck({
       env: environment,
-      externalRefId: transaction.transactionId,
+      externalRefId: transaction.utrId,
       status: targetStatus,
       errorCode: trimmedErrorCode,
     });
@@ -76,7 +76,7 @@ export default function AcknowledgeTransactionModal({ transaction, onClose, onSu
       <div className="space-y-4">
         <p className="text-sm text-neutral-600">
           Transaction{' '}
-          <span className="font-mono text-xs text-neutral-500">{transaction.transactionId}</span> is currently{' '}
+          <span className="font-mono text-xs text-neutral-500">{transaction.utrId}</span> is currently{' '}
           <span className="font-mono font-medium">ACTC</span>. Move it to its final status.
         </p>
 

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { COUNTRY_CODES, CURRENCY_CODES } from '../config/lookups.js';
 import { uuidv7 } from '../utils/uuid.js';
@@ -7,6 +8,12 @@ const transactionSchema = new mongoose.Schema(
     _id: {
       type: String,
       default: uuidv7,
+    },
+    utrId: {
+      type: String,
+      default: () => crypto.randomUUID(),
+      unique: true,
+      sparse: true,
     },
     accountNumber: {
       type: String,
