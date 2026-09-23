@@ -41,7 +41,7 @@ const transactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['ACSC', 'ACTC'],
+      enum: ['ACSC', 'ACTC', 'RJCT'],
       default: 'ACSC',
     },
   },

@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination';
 import InwardCreditModal from '../components/InwardCreditModal';
 import OutwardDebitModal from '../components/OutwardDebitModal';
 import { formatAmount } from '../utils/currency';
+import TransactionStatusBadge from '../components/TransactionStatusBadge';
 
 export default function TransactionsList() {
   const [data, setData] = useState({ items: [], page: 1, limit: 10, total: 0, totalPages: 1 });
@@ -76,20 +77,21 @@ export default function TransactionsList() {
               <th className="px-6 py-3 font-medium">Source account</th>
               <th className="px-6 py-3 font-medium">Beneficiary account</th>
               <th className="px-6 py-3 font-medium text-right">Amount</th>
+              <th className="px-6 py-3 font-medium">Status</th>
               <th className="px-6 py-3 font-medium">Date</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && data.items.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
                   No transactions found
                 </td>
               </tr>
@@ -118,6 +120,9 @@ export default function TransactionsList() {
                     >
                       {isCredit ? '+' : '−'}
                       {formatAmount(txn.amount, txn.currencyCode)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <TransactionStatusBadge status={txn.status} />
                     </td>
                     <td className="px-6 py-3 text-neutral-500">
                       {new Date(txn.createdAt).toLocaleString()}

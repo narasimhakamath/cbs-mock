@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { fetchAccount, deleteAccount, fetchConfig, fetchTransactions } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import TransactionStatusBadge from '../components/TransactionStatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TransactionModal from '../components/TransactionModal';
 import { formatAmount } from '../utils/currency';
@@ -108,6 +109,7 @@ export default function AccountDetail() {
                 <th className="px-6 py-2 font-medium">Source account</th>
                 <th className="px-6 py-2 font-medium">Beneficiary account</th>
                 <th className="px-6 py-2 font-medium text-right">Amount</th>
+                <th className="px-6 py-2 font-medium">Status</th>
                 <th className="px-6 py-2 font-medium">Date</th>
               </tr>
             </thead>
@@ -128,6 +130,9 @@ export default function AccountDetail() {
                     >
                       {isCredit ? '+' : '−'}
                       {formatAmount(txn.amount, txn.currencyCode)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <TransactionStatusBadge status={txn.status} />
                     </td>
                     <td className="px-6 py-3 text-neutral-500">
                       {new Date(txn.createdAt).toLocaleString()}
