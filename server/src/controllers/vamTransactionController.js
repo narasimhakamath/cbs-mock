@@ -50,3 +50,44 @@ export async function postVamCredit(req, res) {
   const responseBody = await upstreamRes.json().catch(() => ({}));
   res.status(upstreamRes.status).json(responseBody);
 }
+
+export async function postVamStatusAck(req, res) {
+  const { env, externalRefId, status, errorCode } = req.body;
+
+  const envKey = (env || '').toUpperCase();
+  const target = DFL_ENVIRONMENTS[envKey];
+  if (!target) {
+    return res.status(400).json({ message: 'env must be one of DEV, QA' });
+  }
+  if (!target.statusAckUrl || !target.token) {
+    return res.status(500).json({ message: `${envKey} environment is not configured for status acknowledgement` });
+  }
+  if (!externalRefId || !status) {
+    return res.status(400).json({ message: 'externalRefId and status are required' });
+  }
+  if (!['ACSC', 'RJCT'].includes(status)) {
+    return res.status(400).json({ message: 'status must be ACSC or RJCT' });
+  }
+  if (status === 'RJCT' && !errorCode) {
+    return res.status(400).json({ message: 'errorCode is required when status is RJCT' });
+  }
+
+  const body = { externalRefId, status, ...(status === 'RJCT' ? { errorCode } : {}) };
+
+  let upstreamRes;
+  try {
+    upstreamRes = await fetch(target.statusAckUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `JWT ${target.token}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    return res.status(502).json({ message: 'Failed to reach VAM status acknowledgement service' });
+  }
+
+  const responseBody = await upstreamRes.json().catch(() => ({}));
+  res.status(upstreamRes.status).json(responseBody);
+}

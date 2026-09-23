@@ -6,6 +6,7 @@ import InwardCreditModal from '../components/InwardCreditModal';
 import OutwardDebitModal from '../components/OutwardDebitModal';
 import { formatAmount } from '../utils/currency';
 import TransactionStatusBadge from '../components/TransactionStatusBadge';
+import AcknowledgeTransactionModal from '../components/AcknowledgeTransactionModal';
 
 export default function TransactionsList() {
   const [data, setData] = useState({ items: [], page: 1, limit: 10, total: 0, totalPages: 1 });
@@ -16,6 +17,7 @@ export default function TransactionsList() {
   const [showInwardCredit, setShowInwardCredit] = useState(false);
   const [showOutwardDebit, setShowOutwardDebit] = useState(false);
   const [knownAccounts, setKnownAccounts] = useState(new Set());
+  const [ackTransaction, setAckTransaction] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,19 +81,20 @@ export default function TransactionsList() {
               <th className="px-6 py-3 font-medium text-right">Amount</th>
               <th className="px-6 py-3 font-medium">Status</th>
               <th className="px-6 py-3 font-medium">Date</th>
+              <th className="px-6 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={7} className="px-6 py-8 text-center text-neutral-400">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && data.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">
+                <td colSpan={7} className="px-6 py-8 text-center text-neutral-400">
                   No transactions found
                 </td>
               </tr>
@@ -126,6 +129,17 @@ export default function TransactionsList() {
                     </td>
                     <td className="px-6 py-3 text-neutral-500">
                       {new Date(txn.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-3">
+                      {txn.status === 'ACTC' && (
+                        <button
+                          type="button"
+                          onClick={() => setAckTransaction(txn)}
+                          className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                        >
+                          Acknowledge
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -162,6 +176,14 @@ export default function TransactionsList() {
             setShowOutwardDebit(false);
             load();
           }}
+        />
+      )}
+
+      {ackTransaction && (
+        <AcknowledgeTransactionModal
+          transaction={ackTransaction}
+          onClose={() => setAckTransaction(null)}
+          onSuccess={load}
         />
       )}
     </div>

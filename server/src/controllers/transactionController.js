@@ -80,6 +80,51 @@ export async function createInwardCredit(req, res) {
   res.status(201).json(transaction);
 }
 
+export async function acknowledgeTransaction(req, res) {
+  const transaction = await Transaction.findById(req.params.id);
+  if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+  const { status, errorCode } = req.body;
+  if (!['ACSC', 'RJCT'].includes(status)) {
+    return res.status(400).json({ message: 'status must be ACSC or RJCT' });
+  }
+  if (transaction.status !== 'ACTC') {
+    return res
+      .status(400)
+      .json({ message: `Transaction is already ${transaction.status}; only ACTC transactions can be acknowledged` });
+  }
+  if (status === 'RJCT' && (!errorCode || !String(errorCode).trim())) {
+    return res.status(400).json({ message: 'errorCode is required to reject a transaction' });
+  }
+
+  if (status === 'RJCT') {
+    const account = await Account.findById(transaction.accountNumber);
+    if (account) {
+      // Undo the original leg: give back what was debited, or claw back what was credited.
+      account.balance += transaction.direction === 'OUTWARD_DEBIT' ? transaction.amount : -transaction.amount;
+      await account.save();
+    }
+
+    await Transaction.create({
+      accountNumber: transaction.accountNumber,
+      direction: transaction.direction === 'OUTWARD_DEBIT' ? 'INWARD_CREDIT' : 'OUTWARD_DEBIT',
+      amount: transaction.amount,
+      currencyCode: transaction.currencyCode,
+      counterpartyAccountNumber: transaction.counterpartyAccountNumber,
+      counterpartyCountryCode: transaction.counterpartyCountryCode,
+      status: 'ACSC',
+      reversalOfTransactionId: transaction._id,
+    });
+
+    transaction.errorCode = String(errorCode).trim();
+  }
+
+  transaction.status = status;
+  await transaction.save();
+
+  res.json(transaction);
+}
+
 export async function createOutwardDebit(req, res) {
   const account = await Account.findById(req.params.id);
   if (!account) return res.status(404).json({ message: 'Account not found' });

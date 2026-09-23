@@ -44,6 +44,14 @@ const transactionSchema = new mongoose.Schema(
       enum: ['ACSC', 'ACTC', 'RJCT'],
       default: 'ACSC',
     },
+    errorCode: {
+      type: String,
+      trim: true,
+    },
+    reversalOfTransactionId: {
+      type: String,
+      ref: 'Transaction',
+    },
   },
   { timestamps: true }
 );

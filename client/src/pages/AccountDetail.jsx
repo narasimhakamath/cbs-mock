@@ -5,6 +5,7 @@ import StatusBadge from '../components/StatusBadge';
 import TransactionStatusBadge from '../components/TransactionStatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TransactionModal from '../components/TransactionModal';
+import AcknowledgeTransactionModal from '../components/AcknowledgeTransactionModal';
 import { formatAmount } from '../utils/currency';
 
 export default function AccountDetail() {
@@ -16,6 +17,7 @@ export default function AccountDetail() {
   const [loading, setLoading] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
   const [showTransaction, setShowTransaction] = useState(false);
+  const [ackTransaction, setAckTransaction] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,6 +113,7 @@ export default function AccountDetail() {
                 <th className="px-6 py-2 font-medium text-right">Amount</th>
                 <th className="px-6 py-2 font-medium">Status</th>
                 <th className="px-6 py-2 font-medium">Date</th>
+                <th className="px-6 py-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -136,6 +139,17 @@ export default function AccountDetail() {
                     </td>
                     <td className="px-6 py-3 text-neutral-500">
                       {new Date(txn.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-3">
+                      {txn.status === 'ACTC' && (
+                        <button
+                          type="button"
+                          onClick={() => setAckTransaction(txn)}
+                          className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                        >
+                          Acknowledge
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -165,6 +179,14 @@ export default function AccountDetail() {
             setShowTransaction(false);
             load();
           }}
+        />
+      )}
+
+      {ackTransaction && (
+        <AcknowledgeTransactionModal
+          transaction={ackTransaction}
+          onClose={() => setAckTransaction(null)}
+          onSuccess={load}
         />
       )}
     </div>
