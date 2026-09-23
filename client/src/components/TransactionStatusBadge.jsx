@@ -1,4 +1,3 @@
-const LABELS = { ACTC: 'Initiated', ACSC: 'Settled', RJCT: 'Rejected' };
 const STYLES = {
   ACTC: 'bg-amber-100 text-amber-700',
   ACSC: 'bg-emerald-100 text-emerald-700',
@@ -13,7 +12,7 @@ export default function TransactionStatusBadge({ status }) {
         STYLES[code] || STYLES.ACSC
       }`}
     >
-      {LABELS[code] || code}
+      {code}
     </span>
   );
 }
