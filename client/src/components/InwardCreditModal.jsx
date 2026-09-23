@@ -103,6 +103,8 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
           ledgerId: vaInfo.ledgerId,
           currency: vaInfo.currency,
           amount: Number(amount),
+          sourceAccountNumber: sourceAccountNumber.trim(),
+          bankCountry: cbsAccount.countryCode,
         });
         if (!ok) {
           setSubmitError(
