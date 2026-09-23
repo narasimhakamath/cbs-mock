@@ -113,7 +113,7 @@ export async function acknowledgeTransaction(req, res) {
       currencyCode: transaction.currencyCode,
       counterpartyAccountNumber: transaction.counterpartyAccountNumber,
       counterpartyCountryCode: transaction.counterpartyCountryCode,
-      status: 'ACSC',
+      status: 'RJCT',
       reversalOfTransactionId: transaction._id,
       utrId: transaction.utrId,
     });
