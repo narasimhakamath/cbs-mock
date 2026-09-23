@@ -126,6 +126,10 @@ export async function createOutwardDebit(req, res) {
   account.balance -= value;
   await account.save();
 
+  // Transfer between two accounts held in this CBS settles (ACSC); a transfer
+  // out to an account this CBS doesn't hold is only accepted for onward clearing (ACTC).
+  const status = beneficiaryAccount ? 'ACSC' : 'ACTC';
+
   const transaction = await Transaction.create({
     accountNumber: account._id,
     direction: 'OUTWARD_DEBIT',
@@ -133,6 +137,7 @@ export async function createOutwardDebit(req, res) {
     currencyCode: counterpartyCurrencyCode,
     counterpartyAccountNumber: trimmedBeneficiary,
     counterpartyCountryCode,
+    status,
   });
 
   if (beneficiaryAccount) {
@@ -145,6 +150,7 @@ export async function createOutwardDebit(req, res) {
       amount: value,
       currencyCode: counterpartyCurrencyCode,
       counterpartyAccountNumber: account._id,
+      status: 'ACSC',
     });
   }
 

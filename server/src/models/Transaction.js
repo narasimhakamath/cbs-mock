@@ -41,8 +41,8 @@ const transactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['COMPLETED'],
-      default: 'COMPLETED',
+      enum: ['ACSC', 'ACTC'],
+      default: 'ACSC',
     },
   },
   { timestamps: true }

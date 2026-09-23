@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import Account from '../models/Account.js';
 import Party from '../models/Party.js';
+import Transaction from '../models/Transaction.js';
 import { mockFxRate } from '../utils/fxRate.js';
 import { uuidv7 } from '../utils/uuid.js';
 import { PURPOSE_CODES_LIST } from '../config/purposeCodes.js';
@@ -318,6 +319,108 @@ export async function quoteRequest(req, res) {
         },
       },
       ReturnStatus: { ReturnCode: 'EAI-TSY-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
+function buildFundTransferResponseHeader(reqHeader, status) {
+  return {
+    ...reqHeader,
+    TransactionRefNo: `EXFNDT-${reqHeader.TransactionRefNo || ''}`,
+    Status: status,
+    EAITimestamp: formatTimestamp(new Date()),
+  };
+}
+
+function fundTransferErrorResponse(res, reqHeader, code, desc) {
+  return res.status(200).json({
+    FundTransferRes: {
+      Header: buildFundTransferResponseHeader(reqHeader, 'F'),
+      Body: {},
+      ReturnStatus: { ReturnCode: code, ReturnDesc: desc, Trace: '' },
+    },
+  });
+}
+
+function generateReferenceNumber() {
+  return crypto.randomBytes(8).toString('hex');
+}
+
+export async function fundTransfer(req, res) {
+  const request = req.body?.FundTransferReq;
+  if (!request?.Header || !request?.Body) {
+    return res.status(400).json({ message: 'FundTransferReq.Header and Body are required' });
+  }
+
+  const { Header: reqHeader, Body: reqBody } = request;
+  const { RemDebitAccountReference, BeneficiaryBankAccountNumber, TransferAmount, SendersReference } = reqBody;
+
+  if (!RemDebitAccountReference || !BeneficiaryBankAccountNumber || !TransferAmount) {
+    return res.status(400).json({
+      message: 'RemDebitAccountReference, BeneficiaryBankAccountNumber and TransferAmount are required',
+    });
+  }
+
+  const amount = Number(TransferAmount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({ message: 'TransferAmount must be a positive number' });
+  }
+
+  const debitAccount = await Account.findById(RemDebitAccountReference);
+  if (!debitAccount) {
+    return fundTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'DEBIT ACCOUNT NOT FOUND');
+  }
+  if (debitAccount.status !== 'ACTIVE') {
+    return fundTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'DEBIT ACCOUNT NOT ACTIVE');
+  }
+  if (amount > debitAccount.balance) {
+    return fundTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'INSUFFICIENT BALANCE');
+  }
+
+  // Credit account may or may not exist in this CBS instance.
+  const creditAccount = await Account.findById(BeneficiaryBankAccountNumber);
+  const status = creditAccount ? 'ACSC' : 'ACTC';
+
+  debitAccount.balance -= amount;
+  await debitAccount.save();
+
+  await Transaction.create({
+    accountNumber: debitAccount._id,
+    direction: 'OUTWARD_DEBIT',
+    amount,
+    currencyCode: debitAccount.currencyCode,
+    counterpartyAccountNumber: BeneficiaryBankAccountNumber,
+    counterpartyCountryCode: creditAccount ? creditAccount.countryCode : undefined,
+    status,
+  });
+
+  if (creditAccount) {
+    creditAccount.balance += amount;
+    await creditAccount.save();
+
+    await Transaction.create({
+      accountNumber: creditAccount._id,
+      direction: 'INWARD_CREDIT',
+      amount,
+      currencyCode: creditAccount.currencyCode,
+      counterpartyAccountNumber: debitAccount._id,
+      status: 'ACSC',
+    });
+  }
+
+  const now = new Date();
+
+  res.json({
+    FundTransferRes: {
+      Header: buildFundTransferResponseHeader(reqHeader, 'S'),
+      Body: {
+        ExternalReferenceNumber: generateReferenceNumber(),
+        InternalReferenceNumber: generateReferenceNumber(),
+        SourceRefNumber: SendersReference || '',
+        SupervisorOverrideCode: '',
+        ExecutionDate: `${now.getFullYear()}-${pad(now.getMonth() + 1, 2)}-${pad(now.getDate(), 2)}`,
+      },
+      ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS', Trace: '' },
     },
   });
 }
