@@ -115,6 +115,7 @@ export async function acknowledgeTransaction(req, res) {
       counterpartyCountryCode: transaction.counterpartyCountryCode,
       status: 'ACSC',
       reversalOfTransactionId: transaction._id,
+      utrId: transaction.utrId,
     });
 
     transaction.errorCode = String(errorCode).trim();

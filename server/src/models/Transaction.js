@@ -11,9 +11,7 @@ const transactionSchema = new mongoose.Schema(
     },
     utrId: {
       type: String,
-      default: () => crypto.randomUUID(),
-      unique: true,
-      sparse: true,
+      default: () => crypto.randomBytes(8).toString('hex'),
     },
     accountNumber: {
       type: String,
