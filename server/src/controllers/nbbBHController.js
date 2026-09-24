@@ -425,6 +425,106 @@ export async function fundTransfer(req, res) {
   });
 }
 
+function buildInternalTransferResponseHeader(reqHeader, status) {
+  return {
+    ...reqHeader,
+    TransactionRefNo: `INTNBB-${reqHeader.TransactionRefNo || ''}`,
+    EAITrackingID: null,
+    Status: status,
+    EAITimestamp: formatTimestamp(new Date()),
+  };
+}
+
+function internalTransferErrorResponse(res, reqHeader, code, desc) {
+  return res.status(200).json({
+    InternalNBBTransferRes: {
+      Header: buildInternalTransferResponseHeader(reqHeader, 'F'),
+      Body: {},
+      ReturnStatus: { ReturnCode: code, ReturnDesc: desc },
+    },
+  });
+}
+
+function generateJournalNumber() {
+  return crypto.randomBytes(7).toString('hex');
+}
+
+export async function internalNBBTransfer(req, res) {
+  const request = req.body?.InternalNBBTransferReq;
+  if (!request?.Header || !request?.Body) {
+    return res.status(400).json({ message: 'InternalNBBTransferReq.Header and Body are required' });
+  }
+
+  const { Header: reqHeader, Body: reqBody } = request;
+  const { FromAccountNumber, FromAmountDebit, ToAccountNumber } = reqBody;
+
+  if (!FromAccountNumber || !ToAccountNumber || !FromAmountDebit) {
+    return res.status(400).json({
+      message: 'FromAccountNumber, ToAccountNumber and FromAmountDebit are required',
+    });
+  }
+
+  const amount = Number(FromAmountDebit);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({ message: 'FromAmountDebit must be a positive number' });
+  }
+
+  const debitAccount = await Account.findById(FromAccountNumber);
+  if (!debitAccount) {
+    return internalTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'DEBIT ACCOUNT NOT FOUND');
+  }
+  if (debitAccount.status !== 'ACTIVE') {
+    return internalTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'DEBIT ACCOUNT NOT ACTIVE');
+  }
+  if (amount > debitAccount.balance) {
+    return internalTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'INSUFFICIENT BALANCE');
+  }
+
+  const creditAccount = await Account.findById(ToAccountNumber);
+  if (!creditAccount) {
+    return internalTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'CREDIT ACCOUNT NOT FOUND');
+  }
+  if (creditAccount.status !== 'ACTIVE') {
+    return internalTransferErrorResponse(res, reqHeader, 'EAI-BANCS-001', 'CREDIT ACCOUNT NOT ACTIVE');
+  }
+
+  debitAccount.balance -= amount;
+  await debitAccount.save();
+
+  await Transaction.create({
+    accountNumber: debitAccount._id,
+    direction: 'OUTWARD_DEBIT',
+    amount,
+    currencyCode: debitAccount.currencyCode,
+    counterpartyAccountNumber: creditAccount._id,
+    counterpartyCountryCode: creditAccount.countryCode,
+    status: 'ACSC',
+  });
+
+  creditAccount.balance += amount;
+  await creditAccount.save();
+
+  await Transaction.create({
+    accountNumber: creditAccount._id,
+    direction: 'INWARD_CREDIT',
+    amount,
+    currencyCode: creditAccount.currencyCode,
+    counterpartyAccountNumber: debitAccount._id,
+    counterpartyCountryCode: debitAccount.countryCode,
+    status: 'ACSC',
+  });
+
+  res.json({
+    InternalNBBTransferRes: {
+      Header: buildInternalTransferResponseHeader(reqHeader, 'S'),
+      Body: {
+        JournalNumber: generateJournalNumber(),
+      },
+      ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
 export async function purposeCodeForCountry(req, res) {
   const request = req.body?.PurposeCodeForCountryReq;
   if (!request?.Header || !request?.Body) {

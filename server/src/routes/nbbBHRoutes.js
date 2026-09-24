@@ -5,6 +5,7 @@ import {
   quoteRequest,
   purposeCodeForCountry,
   fundTransfer,
+  internalNBBTransfer,
 } from '../controllers/nbbBHController.js';
 
 const router = Router();
@@ -14,5 +15,6 @@ router.post('/FullAndMiniStatement', fullAndMiniStatement);
 router.post('/QuoteRequest', quoteRequest);
 router.post('/PurposeCodeForCountry', purposeCodeForCountry);
 router.post('/FundTransfer', fundTransfer);
+router.post('/InternalNBBTransfer', internalNBBTransfer);
 
 export default router;
