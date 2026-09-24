@@ -353,11 +353,11 @@ export async function fundTransfer(req, res) {
   }
 
   const { Header: reqHeader, Body: reqBody } = request;
-  const { RemDebitAccountReference, BeneficiaryBankAccountNumber, TransferAmount, SendersReference } = reqBody;
+  const { RemDebitAccountReference, BeneficiaryAccountRef, TransferAmount, SendersReference } = reqBody;
 
-  if (!RemDebitAccountReference || !BeneficiaryBankAccountNumber || !TransferAmount) {
+  if (!RemDebitAccountReference || !BeneficiaryAccountRef || !TransferAmount) {
     return res.status(400).json({
-      message: 'RemDebitAccountReference, BeneficiaryBankAccountNumber and TransferAmount are required',
+      message: 'RemDebitAccountReference, BeneficiaryAccountRef and TransferAmount are required',
     });
   }
 
@@ -378,7 +378,7 @@ export async function fundTransfer(req, res) {
   }
 
   // Credit account may or may not exist in this CBS instance.
-  const creditAccount = await Account.findById(BeneficiaryBankAccountNumber);
+  const creditAccount = await Account.findById(BeneficiaryAccountRef);
   const status = creditAccount ? 'ACSC' : 'ACTC';
 
   debitAccount.balance -= amount;
@@ -389,7 +389,7 @@ export async function fundTransfer(req, res) {
     direction: 'OUTWARD_DEBIT',
     amount,
     currencyCode: debitAccount.currencyCode,
-    counterpartyAccountNumber: BeneficiaryBankAccountNumber,
+    counterpartyAccountNumber: BeneficiaryAccountRef,
     counterpartyCountryCode: creditAccount ? creditAccount.countryCode : undefined,
     status,
   });
