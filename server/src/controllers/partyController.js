@@ -1,6 +1,7 @@
 import Party from '../models/Party.js';
 import Account from '../models/Account.js';
 import { generatePartyId } from '../utils/generatePartyId.js';
+import { COUNTRY_CODES } from '../config/lookups.js';
 
 export async function listParties(req, res) {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -42,12 +43,15 @@ export async function getParty(req, res) {
 }
 
 export async function createParty(req, res) {
-  const { name, address, type } = req.body;
+  const { name, address, type, countryCode } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ message: 'name is required' });
   }
   if (!['CORPORATE', 'RETAIL'].includes(type)) {
     return res.status(400).json({ message: 'type must be CORPORATE or RETAIL' });
+  }
+  if (!countryCode || !COUNTRY_CODES.includes(countryCode.toUpperCase())) {
+    return res.status(400).json({ message: 'countryCode must be a valid ISO country code' });
   }
 
   const partyId = await generatePartyId();
@@ -56,6 +60,7 @@ export async function createParty(req, res) {
     name: name.trim(),
     address: (address || '').trim(),
     type,
+    countryCode: countryCode.toUpperCase(),
   });
   res.status(201).json(party);
 }
@@ -82,6 +87,17 @@ export async function updateParty(req, res) {
       return res.status(400).json({ message: 'status must be ACTIVE or INACTIVE' });
     }
     update.status = status;
+  }
+  if (req.body.countryCode !== undefined) {
+    const countryCode = req.body.countryCode.toUpperCase();
+    if (!COUNTRY_CODES.includes(countryCode)) {
+      return res.status(400).json({ message: 'countryCode must be a valid ISO country code' });
+    }
+    const accountCount = await Account.countDocuments({ partyId: req.params.id });
+    if (accountCount > 0) {
+      return res.status(409).json({ message: 'Cannot change country of a party that has accounts' });
+    }
+    update.countryCode = countryCode;
   }
 
   const party = await Party.findByIdAndUpdate(req.params.id, update, {

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { COUNTRY_CODES } from '../config/lookups.js';
 
 const partySchema = new mongoose.Schema(
   {
@@ -14,6 +15,12 @@ const partySchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    countryCode: {
+      type: String,
+      required: true,
+      uppercase: true,
+      enum: COUNTRY_CODES,
     },
     type: {
       type: String,

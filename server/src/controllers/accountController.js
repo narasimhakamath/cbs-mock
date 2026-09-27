@@ -1,6 +1,6 @@
 import Account from '../models/Account.js';
 import Party from '../models/Party.js';
-import { COUNTRY_CODES, CURRENCY_CODES } from '../config/lookups.js';
+import { CURRENCY_CODES } from '../config/lookups.js';
 
 const partyPopulate = {
   path: 'partyId',
@@ -50,10 +50,7 @@ export async function getAccount(req, res) {
   res.json(account);
 }
 
-function validateAccountFields({ countryCode, currencyCode }) {
-  if (!countryCode || !COUNTRY_CODES.includes(countryCode.toUpperCase())) {
-    return 'countryCode must be a valid ISO country code';
-  }
+function validateCurrency(currencyCode) {
   if (!currencyCode || !CURRENCY_CODES.includes(currencyCode.toUpperCase())) {
     return 'currencyCode must be a valid ISO currency code';
   }
@@ -61,7 +58,7 @@ function validateAccountFields({ countryCode, currencyCode }) {
 }
 
 export async function createAccount(req, res) {
-  const { partyId, name, accountNumber, countryCode, currencyCode } = req.body;
+  const { partyId, name, accountNumber, currencyCode } = req.body;
 
   if (!partyId) return res.status(400).json({ message: 'partyId is required' });
   const party = await Party.findById(partyId);
@@ -79,14 +76,14 @@ export async function createAccount(req, res) {
     return res.status(409).json({ message: 'An account with this account number already exists' });
   }
 
-  const validationError = validateAccountFields({ countryCode, currencyCode });
+  const validationError = validateCurrency(currencyCode);
   if (validationError) return res.status(400).json({ message: validationError });
 
   const account = await Account.create({
     _id: accountNumber,
     partyId,
     name: name.trim(),
-    countryCode: countryCode.toUpperCase(),
+    countryCode: party.countryCode,
     currencyCode: currencyCode.toUpperCase(),
     balance: 0,
   });
@@ -95,18 +92,12 @@ export async function createAccount(req, res) {
 }
 
 export async function updateAccount(req, res) {
-  const { name, countryCode, currencyCode, status } = req.body;
+  const { name, currencyCode, status } = req.body;
   const update = {};
 
   if (name !== undefined) {
     if (!name.trim()) return res.status(400).json({ message: 'name cannot be empty' });
     update.name = name.trim();
-  }
-  if (countryCode !== undefined) {
-    if (!COUNTRY_CODES.includes(countryCode.toUpperCase())) {
-      return res.status(400).json({ message: 'countryCode must be a valid ISO country code' });
-    }
-    update.countryCode = countryCode.toUpperCase();
   }
   if (currencyCode !== undefined) {
     if (!CURRENCY_CODES.includes(currencyCode.toUpperCase())) {

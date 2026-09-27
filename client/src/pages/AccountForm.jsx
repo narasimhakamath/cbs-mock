@@ -28,7 +28,6 @@ export default function AccountForm() {
     partyId: lockedPartyId || '',
     name: '',
     accountNumber: '',
-    countryCode: '',
     currencyCode: '',
     status: 'ACTIVE',
   });
@@ -48,7 +47,6 @@ export default function AccountForm() {
           partyId: account.partyId?._id || '',
           name: account.name,
           accountNumber: account.accountNumber,
-          countryCode: account.countryCode,
           currencyCode: account.currencyCode,
           status: account.status,
         });
@@ -72,7 +70,6 @@ export default function AccountForm() {
       if (isEdit) {
         await updateAccount(id, {
           name: form.name,
-          countryCode: form.countryCode,
           currencyCode: form.currencyCode,
           status: form.status,
         });
@@ -82,7 +79,6 @@ export default function AccountForm() {
           partyId: form.partyId,
           name: form.name,
           accountNumber: form.accountNumber,
-          countryCode: form.countryCode,
           currencyCode: form.currencyCode,
         });
         navigate(`/accounts/${account.accountNumber}`);
@@ -101,10 +97,16 @@ export default function AccountForm() {
 
   if (loading) return <div className="p-8 text-neutral-400">Loading…</div>;
 
+  const selectedParty = isEdit || lockedPartyId ? lockedParty : parties.find((p) => p._id === form.partyId);
   const partyOptions = (isEdit || lockedPartyId ? [lockedParty].filter(Boolean) : parties).map(
     (p) => ({ value: p._id, label: p.name })
   );
-  const countryOptions = config.countries.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }));
+  const countryLabel = selectedParty?.countryCode
+    ? (() => {
+        const country = config.countries.find((c) => c.code === selectedParty.countryCode);
+        return country ? `${country.name} (${country.code})` : selectedParty.countryCode;
+      })()
+    : '';
   const currencyOptions = config.currencies.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }));
 
   return (
@@ -117,7 +119,7 @@ export default function AccountForm() {
       saving={saving}
       submitDisabled={
         !isEdit &&
-        (!form.partyId || form.accountNumber.length !== 16 || !form.countryCode || !form.currencyCode)
+        (!form.partyId || form.accountNumber.length !== 16 || !form.currencyCode)
       }
       submitLabel={isEdit ? 'Save changes' : 'Create account'}
     >
@@ -171,13 +173,16 @@ export default function AccountForm() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <SearchableSelect
-          label="Country"
-          value={form.countryCode}
-          onChange={set('countryCode')}
-          options={countryOptions}
-          placeholder="Select country"
-        />
+        <div>
+          <label className={labelClass}>Country</label>
+          <input
+            className={`${inputClass} bg-neutral-50 text-neutral-400`}
+            value={countryLabel}
+            placeholder="Select a party first"
+            disabled
+            readOnly
+          />
+        </div>
         <SearchableSelect
           label="Currency"
           value={form.currencyCode}

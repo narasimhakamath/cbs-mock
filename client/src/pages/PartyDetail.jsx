@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { fetchParty, updateParty, deleteParty, fetchPartyAccounts } from '../api/client';
+import { fetchParty, updateParty, deleteParty, fetchPartyAccounts, fetchConfig } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatAmount } from '../utils/currency';
@@ -15,6 +15,7 @@ export default function PartyDetail() {
   const navigate = useNavigate();
   const [party, setParty] = useState(null);
   const [accounts, setAccounts] = useState({ items: [], total: 0 });
+  const [config, setConfig] = useState({ countries: [] });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('accounts');
   const [showDelete, setShowDelete] = useState(false);
@@ -37,6 +38,10 @@ export default function PartyDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    fetchConfig().then(setConfig);
+  }, []);
 
   const handleDelete = async () => {
     setDeleteError('');
@@ -120,6 +125,15 @@ export default function PartyDetail() {
             <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">Type</div>
             <div className="mt-1 text-base text-neutral-800">
               {party.type === 'CORPORATE' ? 'Corporate' : 'Retail'}
+            </div>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">Country</div>
+            <div className="mt-1 text-base text-neutral-800">
+              {(() => {
+                const country = config.countries.find((c) => c.code === party.countryCode);
+                return country ? `${country.name} (${country.code})` : party.countryCode || '—';
+              })()}
             </div>
           </div>
           <div className="rounded-xl border border-neutral-200 bg-white p-4">
