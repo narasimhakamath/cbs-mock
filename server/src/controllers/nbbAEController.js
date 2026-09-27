@@ -130,7 +130,7 @@ export async function depositAccountDetailsEnquiry(req, res) {
 
   if (CIF) {
     party = await Party.findById(CIF);
-    if (!party) return errorResponse(res, reqHeader, CIF, 'EAI-BANCS-001', 'ERROR');
+    if (!party) return errorResponse(res, reqHeader, '', 'EAI-BANCS-001', 'ERROR');
     accounts = await Account.find({ partyId: party._id, countryCode: COUNTRY_CODE });
   } else if (AccountNumber) {
     const account = await Account.findById(AccountNumber);
