@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { fetchParty, updateParty, deleteParty, fetchPartyAccounts, fetchConfig } from '../api/client';
+import { fetchParty, updateParty, deleteParty, fetchPartyAccounts, fetchConfig, fetchUsers } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatAmount } from '../utils/currency';
 
 const TABS = [
   { key: 'accounts', label: 'Accounts' },
+  { key: 'users', label: 'Users' },
   { key: 'details', label: 'Details' },
 ];
 
@@ -15,6 +16,7 @@ export default function PartyDetail() {
   const navigate = useNavigate();
   const [party, setParty] = useState(null);
   const [accounts, setAccounts] = useState({ items: [], total: 0 });
+  const [users, setUsers] = useState({ items: [], total: 0 });
   const [config, setConfig] = useState({ countries: [] });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('accounts');
@@ -24,12 +26,14 @@ export default function PartyDetail() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [partyData, accountsData] = await Promise.all([
+      const [partyData, accountsData, usersData] = await Promise.all([
         fetchParty(id),
         fetchPartyAccounts(id, { limit: 50 }),
+        fetchUsers({ partyId: id, limit: 100 }),
       ]);
       setParty(partyData);
       setAccounts(accountsData);
+      setUsers(usersData);
     } finally {
       setLoading(false);
     }
@@ -111,6 +115,7 @@ export default function PartyDetail() {
           >
             {t.label}
             {t.key === 'accounts' && ` (${accounts.total})`}
+            {t.key === 'users' && party.type === 'CORPORATE' && ` (${users.total})`}
           </button>
         ))}
       </div>
@@ -140,6 +145,53 @@ export default function PartyDetail() {
             <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">Address</div>
             <div className="mt-1 text-base text-neutral-800">{party.address || '—'}</div>
           </div>
+        </div>
+      )}
+
+      {tab === 'users' && (
+        <div className="rounded-xl border border-neutral-200 bg-white">
+          <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-3">
+            <span className="text-sm font-medium text-neutral-700">Users ({users.total})</span>
+            {party.type === 'CORPORATE' && (
+              <button
+                onClick={() => navigate(`/users/new?partyId=${id}`)}
+                className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800"
+              >
+                + Create user
+              </button>
+            )}
+          </div>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-neutral-100 text-xs uppercase tracking-wide text-neutral-400">
+                <th className="px-6 py-3 font-medium">Name</th>
+                <th className="px-6 py-3 font-medium">Email</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.items.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-8 text-center text-neutral-400">
+                    No users linked
+                  </td>
+                </tr>
+              )}
+              {users.items.map((u) => (
+                <tr
+                  key={u._id}
+                  onClick={() => navigate(`/users/${u._id}`)}
+                  className="cursor-pointer border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
+                >
+                  <td className="px-6 py-3 font-medium text-neutral-700">{u.name}</td>
+                  <td className="px-6 py-3 text-neutral-600">{u.email}</td>
+                  <td className="px-6 py-3">
+                    <StatusBadge status={u.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import Account from '../models/Account.js';
 import Party from '../models/Party.js';
+import User from '../models/User.js';
 import { CURRENCY_CODES } from '../config/lookups.js';
 
 const partyPopulate = {
@@ -123,5 +124,9 @@ export async function updateAccount(req, res) {
 export async function deleteAccount(req, res) {
   const account = await Account.findByIdAndDelete(req.params.id);
   if (!account) return res.status(404).json({ message: 'Account not found' });
+  await User.updateMany(
+    { 'entitlements.accountIds': account._id },
+    { $pull: { 'entitlements.$[].accountIds': account._id } }
+  );
   res.status(204).send();
 }

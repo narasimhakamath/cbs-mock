@@ -7,6 +7,7 @@ import {
   deleteParty,
 } from '../controllers/partyController.js';
 import { listAccounts } from '../controllers/accountController.js';
+import { listUsers } from '../controllers/userController.js';
 
 const router = Router();
 
@@ -18,6 +19,11 @@ router.delete('/:id', deleteParty);
 router.get('/:id/accounts', (req, res) => {
   req.params.partyId = req.params.id;
   return listAccounts(req, res);
+});
+
+router.get('/:id/users', (req, res) => {
+  req.params.partyId = req.params.id;
+  return listUsers(req, res);
 });
 
 export default router;

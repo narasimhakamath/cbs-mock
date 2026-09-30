@@ -1,5 +1,6 @@
 import Party from '../models/Party.js';
 import Account from '../models/Account.js';
+import User from '../models/User.js';
 import { generatePartyId } from '../utils/generatePartyId.js';
 import { COUNTRY_CODES } from '../config/lookups.js';
 
@@ -115,5 +116,9 @@ export async function deleteParty(req, res) {
   }
   const party = await Party.findByIdAndDelete(req.params.id);
   if (!party) return res.status(404).json({ message: 'Party not found' });
+  await User.updateMany(
+    { 'entitlements.partyId': party._id },
+    { $pull: { entitlements: { partyId: party._id } } }
+  );
   res.status(204).send();
 }

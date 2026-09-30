@@ -6,6 +6,7 @@ import morgan from 'morgan';
 
 import accountsRouter from './routes/accounts.js';
 import partiesRouter from './routes/parties.js';
+import usersRouter from './routes/users.js';
 import transactionsRouter from './routes/transactions.js';
 import physicalAccountsRouter from './routes/physicalAccounts.js';
 import vamTransactionsRouter from './routes/vamTransactions.js';
@@ -26,6 +27,7 @@ app.use(morgan('dev'));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/accounts', accountsRouter);
 app.use('/api/parties', partiesRouter);
+app.use('/api/users', usersRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/physical-accounts', physicalAccountsRouter);
 app.use('/api/vam-transactions', vamTransactionsRouter);

@@ -119,3 +119,32 @@ export async function fetchPartyAccounts(id, { page = 1, limit = 10 } = {}) {
   const { data } = await api.get(`/parties/${id}/accounts`, { params: { page, limit } });
   return data;
 }
+
+export async function fetchUsers({ page = 1, limit = 10, search = '', partyId } = {}) {
+  const { data } = await api.get('/users', { params: { page, limit, search, partyId } });
+  return data;
+}
+
+export async function fetchUser(id) {
+  const { data } = await api.get(`/users/${id}`);
+  return data;
+}
+
+export async function createUser(payload) {
+  const { data } = await api.post('/users', payload);
+  return data;
+}
+
+export async function updateUser(id, payload) {
+  const { data } = await api.patch(`/users/${id}`, payload);
+  return data;
+}
+
+export async function deleteUser(id) {
+  await api.delete(`/users/${id}`);
+}
+
+export async function fetchUserAccounts(id, { page = 1, limit = 50 } = {}) {
+  const { data } = await api.get(`/users/${id}/accounts`, { params: { page, limit } });
+  return data;
+}

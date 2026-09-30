@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import logo from '../assets/logo-all-white.svg';
-import { IconParties, IconAccounts, IconTransactions, IconMenu } from './icons';
+import { IconParties, IconAccounts, IconTransactions, IconUsers, IconMenu } from './icons';
 import { useEnvironment, ENVIRONMENTS } from '../context/EnvironmentContext';
 
 const navItems = [
   { to: '/parties', label: 'Parties', Icon: IconParties },
+  { to: '/users', label: 'Users', Icon: IconUsers },
   { to: '/accounts', label: 'Accounts', Icon: IconAccounts },
   { to: '/transactions', label: 'Transactions', Icon: IconTransactions },
 ];
