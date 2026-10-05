@@ -153,6 +153,7 @@ export async function depositAccountDetailsEnquiry(req, res) {
         CIFNumber: party._id,
         CPR: `MOCK-CPR-${party._id}`,
         CorporateName: party.type === 'CORPORATE' ? party.name : null,
+        CountryCode: party.countryCode,
         CustomerCategoryFlag: CUSTOMER_CATEGORY_CODES[party.type] || '99',
         TotalNumberOfAccounts: accounts.length,
         IssuerType: null,
