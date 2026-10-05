@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import Account from '../models/Account.js';
 import Party from '../models/Party.js';
+import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import { mockFxRate } from '../utils/fxRate.js';
 import { uuidv7 } from '../utils/uuid.js';
@@ -552,6 +553,68 @@ export async function purposeCodeForCountry(req, res) {
       },
       Body: {
         PurposeCodesList: PURPOSE_CODES_LIST,
+      },
+      ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
+    },
+  });
+}
+
+function buildUserEnquiryResponseHeader(reqHeader, status) {
+  return {
+    ...reqHeader,
+    TransactionRefNo: `CBUENQ-${reqHeader.TransactionRefNo || ''}`,
+    Status: status,
+    EAITimestamp: formatTimestamp(new Date()),
+  };
+}
+
+function mapUser(user) {
+  return {
+    ID: user._id,
+    Name: user.name,
+    Email: user.email,
+    PhoneDialCode: user.phoneDialCode,
+    Phone: user.phone,
+    Status: user.status,
+    Entitlements: user.entitlements.map((e) => ({
+      PartyId: e.partyId,
+      Access: e.access,
+      AccountIds: e.accountIds,
+    })),
+    CreatedAt: user.createdAt,
+    UpdatedAt: user.updatedAt,
+  };
+}
+
+export async function corporateBankingUserEnquiry(req, res) {
+  const request = req.body?.CorporateBankingUserEnquiryReq;
+  if (!request?.Header || !request?.Body) {
+    return res.status(400).json({ message: 'CorporateBankingUserEnquiryReq.Header and Body are required' });
+  }
+
+  const { Header: reqHeader, Body: reqBody } = request;
+  const { CIB } = reqBody;
+
+  if (!CIB) {
+    return res.status(400).json({ message: 'CIB is required' });
+  }
+
+  const user = await User.findById(CIB);
+  if (!user) {
+    return res.status(200).json({
+      CorporateBankingUserEnquiryRes: {
+        Header: buildUserEnquiryResponseHeader(reqHeader, 'S'),
+        Body: {},
+        ReturnStatus: { ReturnCode: 'EAI-BANCS-001', ReturnDesc: 'ERROR' },
+      },
+    });
+  }
+
+  res.json({
+    CorporateBankingUserEnquiryRes: {
+      Header: buildUserEnquiryResponseHeader(reqHeader, 'S'),
+      Body: {
+        User: mapUser(user),
       },
       ReturnStatus: { ReturnCode: 'EAI-BANCS-000', ReturnDesc: 'SUCCESS' },
     },
