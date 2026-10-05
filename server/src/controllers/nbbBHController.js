@@ -529,22 +529,26 @@ export async function internalNBBTransfer(req, res) {
 }
 
 export async function purposeCodeForCountry(req, res) {
-  const request = req.body?.PurposeCodeForCountryReq;
-  if (!request?.Header || !request?.Body) {
-    return res.status(400).json({ message: 'PurposeCodeForCountryReq.Header and Body are required' });
-  }
-
-  const { Header: reqHeader } = request;
-  const now = new Date();
-
+  // Mock: accepts any request and always returns the fixed purpose code list.
   res.json({
     PurposeCodeForCountryRes: {
       Header: {
-        ...reqHeader,
-        SrcAppTimestamp: formatTimestamp(now),
+        MsgVersion: '1.0',
+        SrcAppId: 'CIB',
+        OrgId: 'BH',
+        SrcCompId: 'NA',
+        SrcMsgId: 'MSG1',
+        SrcAppTimestamp: '28102024114704',
+        BusinessDate: '28102024',
+        SrvCode: 'PCCNTY',
+        SrvName: 'PurposeCodeForCountry',
+        TransactionRefNo: 'PCCNTY-df',
         EAITrackingID: null,
+        Language: 'EN',
+        InstanceId: 'CIB000',
+        TargetApp: 'BANCSUAT',
         Status: 'S',
-        EAITimestamp: formatTimestamp(now),
+        EAITimestamp: '28102024114704',
       },
       Body: {
         PurposeCodesList: PURPOSE_CODES_LIST,
