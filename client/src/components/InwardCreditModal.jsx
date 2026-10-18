@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { inputClass, labelClass } from './formStyles';
-import { resolvePhysicalAccount, fetchAccount, createInwardCredit, postVamCredit } from '../api/client';
+import { resolvePhysicalAccount, fetchAccount, createInwardCredit, postVamCredit, postMarkMissingTransaction } from '../api/client';
 import { useEnvironment } from '../context/EnvironmentContext';
 
 function generateAccountNumber() {
@@ -94,7 +94,26 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
         currencyCode: cbsAccount.currencyCode,
       });
 
-      if (vaInfo) {
+      if (!vaInfo) {
+        const { ok, data } = await postMarkMissingTransaction({
+          env: environment,
+          physicalAccountId: cbsAccount._id,
+          transactionReferenceId: transaction.transactionId,
+          indicator: 'CREDIT',
+          amount: Number(amount),
+          currency: cbsAccount.currencyCode,
+          countryCode: cbsAccount.countryCode,
+        });
+        if (!ok) {
+          setSubmitError(
+            `Physical account was credited, but marking the missing transaction failed: ${
+              data?.message || 'unknown error'
+            }`
+          );
+          setSubmitting(false);
+          return;
+        }
+      } else {
         const { ok, data } = await postVamCredit({
           env: environment,
           externalRefId: transaction.utrId,

@@ -74,6 +74,13 @@ export async function postVamStatusAck(payload) {
   return { ok: status >= 200 && status < 300, status, data };
 }
 
+export async function postMarkMissingTransaction(payload) {
+  const { data, status } = await api.post('/vam-transactions/mark-missing-transaction', payload, {
+    validateStatus: () => true,
+  });
+  return { ok: status >= 200 && status < 300, status, data };
+}
+
 export async function acknowledgeTransaction(id, payload) {
   const { data, status } = await api.post(`/transactions/${id}/acknowledge`, payload, {
     validateStatus: () => true,

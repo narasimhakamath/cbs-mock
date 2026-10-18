@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { DFL_ENVIRONMENTS } from '../config/dflEnvironments.js';
+import { getCurrencyPrecision } from '../utils/currency.js';
+import { toLocalDate } from '../utils/countryTime.js';
 
 function buildMockTransferDetails(sourceAccountNumber, bankCountry) {
   return {
@@ -120,6 +122,59 @@ export async function postVamStatusAck(req, res) {
     });
   } catch (err) {
     return res.status(502).json({ message: 'Failed to reach VAM status acknowledgement service' });
+  }
+
+  const responseBody = await upstreamRes.json().catch(() => ({}));
+  res.status(upstreamRes.status).json(responseBody);
+}
+
+export async function postMarkMissingTransaction(req, res) {
+  const { env, physicalAccountId, transactionReferenceId, indicator, amount, currency, countryCode, statementDate } =
+    req.body;
+
+  const envKey = (env || '').toUpperCase();
+  const target = DFL_ENVIRONMENTS[envKey];
+  if (!target) {
+    return res.status(400).json({ message: 'env must be one of DEV, QA' });
+  }
+  if (!target.baseUrl || !target.token) {
+    return res.status(500).json({ message: `${envKey} environment is not configured` });
+  }
+  if (!physicalAccountId || !transactionReferenceId || !currency || !amount) {
+    return res
+      .status(400)
+      .json({ message: 'physicalAccountId, transactionReferenceId, currency and amount are required' });
+  }
+  if (!['CREDIT', 'DEBIT'].includes(indicator)) {
+    return res.status(400).json({ message: 'indicator must be CREDIT or DEBIT' });
+  }
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    return res.status(400).json({ message: 'amount must be a positive number' });
+  }
+
+  const body = {
+    physicalAccountId,
+    transactionReferenceId,
+    indicator,
+    amount: value.toFixed(getCurrencyPrecision(currency)),
+    currency,
+    // Statement date is the account's local calendar date.
+    statementDate: statementDate || toLocalDate(new Date(), countryCode).toISOString().slice(0, 10),
+  };
+
+  let upstreamRes;
+  try {
+    upstreamRes = await fetch(`${target.baseUrl}/proxy/reconciliations/markMissingTransaction`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `JWT ${target.token}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    return res.status(502).json({ message: 'Failed to reach reconciliations service' });
   }
 
   const responseBody = await upstreamRes.json().catch(() => ({}));
