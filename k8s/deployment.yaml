@@ -24,8 +24,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: cbs-mock-config
-            - secretRef:
-                name: cbs-mock-secrets
           readinessProbe:
             httpGet:
               path: /health

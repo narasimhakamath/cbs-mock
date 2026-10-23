@@ -5,3 +5,10 @@ metadata:
   namespace: cbs
 data:
   PORT: "4000"
+  DFL_DEV_BASE_URL: "https://dev.dfl.datanimbus.com"
+  DFL_QA_BASE_URL: "https://ledgers.demo.datanimbus.com"
+  VAM_DEV_STATUS_ACK_URL: "https://dev.dfl.datanimbus.com/proxy/payments/status"
+  VAM_QA_STATUS_ACK_URL: "https://ledgers.demo.datanimbus.com/proxy/payments/status"
+  MONGO_URI: "mongodb+srv://<user>:<password>@<host>/cbs_mock"
+  DFL_DEV_AUTH_TOKEN: "<dev-token>"
+  DFL_QA_AUTH_TOKEN: "<qa-token>"
