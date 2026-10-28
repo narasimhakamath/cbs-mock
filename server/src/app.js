@@ -13,6 +13,7 @@ import vamTransactionsRouter from './routes/vamTransactions.js';
 import configRouter from './routes/config.js';
 import nbbAERoutes from './routes/nbbAERoutes.js';
 import nbbBHRoutes from './routes/nbbBHRoutes.js';
+import beaconAERoutes from './routes/beaconAERoutes.js';
 import cbsStubRoutes from './routes/cbsStubRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -35,6 +36,7 @@ app.use('/api/vam-transactions', vamTransactionsRouter);
 app.use('/api/config', configRouter);
 app.use('/api/nbb-ae', nbbAERoutes);
 app.use('/api/nbb-bh', nbbBHRoutes);
+app.use('/api/beacon-ae', beaconAERoutes);
 app.use('/api/cbs-stub', cbsStubRoutes);
 
 app.use(express.static(clientDist));
