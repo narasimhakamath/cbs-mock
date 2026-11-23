@@ -98,7 +98,7 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
         const { ok, data } = await postMarkMissingTransaction({
           env: environment,
           physicalAccountId: cbsAccount._id,
-          transactionReferenceId: transaction.transactionId,
+          transactionReferenceId: transaction.utrId,
           indicator: 'CREDIT',
           amount: Number(amount),
           currency: cbsAccount.currencyCode,
@@ -117,7 +117,7 @@ export default function InwardCreditModal({ onClose, onSuccess }) {
         const { ok, data } = await postVamCredit({
           env: environment,
           externalRefId: transaction.utrId,
-          transactionReferenceId: transaction.transactionId,
+          transactionReferenceId: transaction.utrId,
           accountId: vaInfo.virtualAccountId,
           ledgerId: vaInfo.ledgerId,
           currency: vaInfo.currency,
