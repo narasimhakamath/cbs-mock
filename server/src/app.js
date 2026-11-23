@@ -46,6 +46,7 @@ app.use('/api/local', localRoutes);
 app.use((req, res, next) => {
   if (req.path.startsWith('/cbs/api/')) {
     req.url = req.url.replace('/cbs/api/', '/api/');
+    return app(req, res, next);
   }
   next();
 });
