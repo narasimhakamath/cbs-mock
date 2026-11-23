@@ -7,33 +7,33 @@ import { FINANCIAL_INSTITUTION_IDS } from '../config/lookups.js';
 
 // POST /api/local/validate-cif
 // VAM sends: { cif }
-// VAM reads: { data: { isValidCIF, party } }
+// VAM reads: { isValidCIF, party }
 export async function validateCIF(req, res) {
   const { cif } = req.body;
   if (!cif) return res.status(400).json({ message: 'cif is required' });
 
   const party = await Party.findById(cif);
-  if (!party) return res.json({ data: { isValidCIF: false, party: null } });
+  if (!party) return res.json({ isValidCIF: false, party: null });
 
-  return res.json({ data: { isValidCIF: true, party } });
+  return res.json({ isValidCIF: true, party });
 }
 
 // POST /api/local/validate-cib
 // VAM sends: { cib }
-// VAM reads: { data: { isValidCIB, user } }
+// VAM reads: { isValidCIB, user }
 export async function validateCIB(req, res) {
   const { cib } = req.body;
   if (!cib) return res.status(400).json({ message: 'cib is required' });
 
   const user = await User.findById(cib);
-  if (!user) return res.json({ data: { isValidCIB: false, user: null } });
+  if (!user) return res.json({ isValidCIB: false, user: null });
 
-  return res.json({ data: { isValidCIB: true, user } });
+  return res.json({ isValidCIB: true, user });
 }
 
 // POST /api/local/validate-physical-account
 // VAM sends: { accountId, country }
-// VAM reads: { data: { currencyCode, country, financialInstitutionId } }
+// VAM reads: { currencyCode, country, financialInstitutionId }
 export async function validatePhysicalAccount(req, res) {
   const { accountId, country } = req.body;
   if (!accountId) return res.status(400).json({ message: 'accountId is required' });
@@ -42,17 +42,15 @@ export async function validatePhysicalAccount(req, res) {
   if (!account) return res.status(404).json({ message: 'Account not found' });
 
   return res.json({
-    data: {
-      currencyCode: account.currencyCode,
-      country: account.countryCode,
-      financialInstitutionId: FINANCIAL_INSTITUTION_IDS[account.countryCode] ?? '999',
-    },
+    currencyCode: account.currencyCode,
+    country: account.countryCode,
+    financialInstitutionId: FINANCIAL_INSTITUTION_IDS[account.countryCode] ?? '999',
   });
 }
 
 // POST /api/local/get-pa-balance
 // VAM sends: { physicalAccountId, countryCode, currencyCode }
-// VAM reads: { data: { physicalAccountId, currency, availableBalance } }
+// VAM reads: { physicalAccountId, currency, availableBalance }
 export async function getPABalance(req, res) {
   const { physicalAccountId } = req.body;
   if (!physicalAccountId) return res.status(400).json({ message: 'physicalAccountId is required' });
@@ -61,52 +59,55 @@ export async function getPABalance(req, res) {
   if (!account) return res.status(404).json({ message: 'Account not found' });
 
   return res.json({
-    data: {
-      physicalAccountId: account._id,
-      currency: account.currencyCode,
-      availableBalance: account.balance,
-    },
+    physicalAccountId: account._id,
+    currency: account.currencyCode,
+    availableBalance: account.balance,
   });
 }
 
 // POST /api/local/cif-accounts
 // VAM sends: { cif }
-// VAM reads: { data: [ { accountId, ... } ] }
+// VAM reads: [ { accountId, ... } ]
 export async function cifAccounts(req, res) {
   const { cif } = req.body;
   if (!cif) return res.status(400).json({ message: 'cif is required' });
 
   const accounts = await Account.find({ partyId: cif });
 
-  return res.json({ data: accounts.map(a => ({ accountId: a._id, ...a.toJSON() })) });
+  return res.json(accounts.map(a => ({
+    accountId: a._id,
+    name: a.name,
+    currency: a.currencyCode,
+    country: a.countryCode,
+    financialInstitutionId: FINANCIAL_INSTITUTION_IDS[a.countryCode] ?? '999',
+    balance: a.balance,
+  })));
 }
 
 // POST /api/local/initiate-kyc
 // VAM sends: { new: <account>, old: <account|null> }
-// VAM reads: { data: { attributes, kycExternalData } } — auto-approve
+// VAM reads: { attributes, kycExternalData } — auto-approve
 export async function initiateKYC(req, res) {
   const incoming = req.body?.new || {};
   const attributes = incoming.attributes || {};
 
   return res.json({
-    data: {
-      ...attributes,
-      kycExternalData: attributes.kycExternalData || [],
-      attributes,
-    },
+    ...attributes,
+    kycExternalData: attributes.kycExternalData || [],
+    attributes,
   });
 }
 
 // POST /api/local/payout-adaptor
 // VAM sends: full payment body (req.body)
-// VAM reads: { data: { status, code, message } } — RJCT/FAIL triggers error
+// VAM reads: { status, code, message } — RJCT/FAIL triggers error
 export async function payoutAdaptor(req, res) {
-  return res.json({ data: { status: 'ACCP', code: 'LOCAL_CBS', message: 'Accepted by local CBS mock' } });
+  return res.json({ status: 'ACCP', code: 'LOCAL_CBS', message: 'Accepted by local CBS mock' });
 }
 
 // POST /api/local/exchange-rate
 // VAM sends: { fromCurrency, toCurrency, amount }
-// VAM reads: { data: { exchangeRate, contract } }
+// VAM reads: { exchangeRate, contract }
 export async function exchangeRate(req, res) {
   const { fromCurrency, toCurrency, amount } = req.body;
   if (!fromCurrency || !toCurrency) return res.status(400).json({ message: 'fromCurrency and toCurrency are required' });
@@ -115,16 +116,14 @@ export async function exchangeRate(req, res) {
   const rate = mockFxRate(symbol);
 
   return res.json({
-    data: {
-      exchangeRate: rate,
-      contract: `LOCAL-${fromCurrency}-${toCurrency}-${Date.now()}`,
-    },
+    exchangeRate: rate,
+    contract: `LOCAL-${fromCurrency}-${toCurrency}-${Date.now()}`,
   });
 }
 
 // POST /api/local/quote
 // VAM sends: { fromCurrency, toCurrency, amount }
-// VAM reads: { data: <entire object> }
+// VAM reads: response.data directly (the entire object)
 export async function quote(req, res) {
   const { fromCurrency, toCurrency, amount } = req.body;
   if (!fromCurrency || !toCurrency) return res.status(400).json({ message: 'fromCurrency and toCurrency are required' });
@@ -134,15 +133,13 @@ export async function quote(req, res) {
   const convertedAmount = amount ? Number((amount * rate).toFixed(6)) : null;
 
   return res.json({
-    data: {
-      fromCurrency,
-      toCurrency,
-      amount,
-      exchangeRate: rate,
-      convertedAmount,
-      contract: `LOCAL-QUOTE-${fromCurrency}-${toCurrency}-${Date.now()}`,
-      validUntil: new Date(Date.now() + 60_000).toISOString(),
-    },
+    fromCurrency,
+    toCurrency,
+    amount,
+    exchangeRate: rate,
+    convertedAmount,
+    contract: `LOCAL-QUOTE-${fromCurrency}-${toCurrency}-${Date.now()}`,
+    validUntil: new Date(Date.now() + 60_000).toISOString(),
   });
 }
 
