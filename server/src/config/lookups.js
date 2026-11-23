@@ -157,6 +157,30 @@ const DIAL_CODES = {
   RU: '+7',
 };
 
+export const FINANCIAL_INSTITUTION_IDS = {
+  AE: '999',
+  BH: 'DEMO',
+  SA: '99',
+  QA: 'DEMO',
+  KW: 'DEMO',
+  OM: '999',
+  JO: 'DEMO',
+  EG: '9999',
+  GB: 'DEMO',
+  DE: '99999999',
+  FR: '99999',
+  NL: 'DEMO',
+  CH: '99999',
+  ES: '9999',
+  IT: '99999',
+  IE: 'DEMO',
+  LU: '999',
+  BE: '999',
+  TR: '99999',
+  PL: '99999999',
+  BR: '99999999',
+};
+
 export const COUNTRIES = BASE_COUNTRIES.map((c) => ({ ...c, dialCode: DIAL_CODES[c.code] }));
 
 export const COUNTRY_CODES = COUNTRIES.map((c) => c.code);

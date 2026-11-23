@@ -15,6 +15,7 @@ import nbbAERoutes from './routes/nbbAERoutes.js';
 import nbbBHRoutes from './routes/nbbBHRoutes.js';
 import beaconAERoutes from './routes/beaconAERoutes.js';
 import cbsStubRoutes from './routes/cbsStubRoutes.js';
+import localRoutes from './routes/localRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,7 @@ app.use('/api/nbb-ae', nbbAERoutes);
 app.use('/api/nbb-bh', nbbBHRoutes);
 app.use('/api/beacon-ae', beaconAERoutes);
 app.use('/api/cbs-stub', cbsStubRoutes);
+app.use('/api/local', localRoutes);
 
 app.use(express.static(clientDist));
 app.get(/^\/(?!api\/).*/, (req, res) => {
