@@ -28,6 +28,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 app.use('/api/accounts', accountsRouter);
 app.use('/api/parties', partiesRouter);
 app.use('/api/users', usersRouter);
@@ -41,8 +42,16 @@ app.use('/api/beacon-ae', beaconAERoutes);
 app.use('/api/cbs-stub', cbsStubRoutes);
 app.use('/api/local', localRoutes);
 
-app.use(express.static(clientDist));
-app.get(/^\/(?!api\/).*/, (req, res) => {
+// Rewrite /cbs/api/* → /api/* so the built React client hits the same routes
+app.use((req, res, next) => {
+  if (req.path.startsWith('/cbs/api/')) {
+    req.url = req.url.replace('/cbs/api/', '/api/');
+  }
+  next();
+});
+
+app.use('/cbs', express.static(clientDist));
+app.get(/^\/cbs(?!\/api)(\/.*)?$/, (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 
