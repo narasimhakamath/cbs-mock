@@ -29,27 +29,20 @@ app.use(morgan('dev'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-app.use('/api/accounts', accountsRouter);
-app.use('/api/parties', partiesRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/transactions', transactionsRouter);
-app.use('/api/physical-accounts', physicalAccountsRouter);
-app.use('/api/vam-transactions', vamTransactionsRouter);
-app.use('/api/config', configRouter);
-app.use('/api/nbb-ae', nbbAERoutes);
-app.use('/api/nbb-bh', nbbBHRoutes);
-app.use('/api/beacon-ae', beaconAERoutes);
-app.use('/api/cbs-stub', cbsStubRoutes);
-app.use('/api/local', localRoutes);
-
-// Rewrite /cbs/api/* → /api/* so the built React client hits the same routes
-app.use((req, res, next) => {
-  if (req.path.startsWith('/cbs/api/')) {
-    req.url = req.url.replace('/cbs/api/', '/api/');
-    return app(req, res, next);
-  }
-  next();
-});
+for (const prefix of ['/api', '/cbs/api']) {
+  app.use(`${prefix}/accounts`, accountsRouter);
+  app.use(`${prefix}/parties`, partiesRouter);
+  app.use(`${prefix}/users`, usersRouter);
+  app.use(`${prefix}/transactions`, transactionsRouter);
+  app.use(`${prefix}/physical-accounts`, physicalAccountsRouter);
+  app.use(`${prefix}/vam-transactions`, vamTransactionsRouter);
+  app.use(`${prefix}/config`, configRouter);
+  app.use(`${prefix}/nbb-ae`, nbbAERoutes);
+  app.use(`${prefix}/nbb-bh`, nbbBHRoutes);
+  app.use(`${prefix}/beacon-ae`, beaconAERoutes);
+  app.use(`${prefix}/cbs-stub`, cbsStubRoutes);
+  app.use(`${prefix}/local`, localRoutes);
+}
 
 app.use('/cbs', express.static(clientDist));
 app.get(/^\/cbs(?!\/api)(\/.*)?$/, (req, res) => {
