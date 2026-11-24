@@ -144,10 +144,12 @@ export async function quote(req, res) {
 }
 
 // POST /api/local/bank-statement
-// VAM sends: { ledgerId, fromDate, toDate, physicalAccountId, countryCode }
-// VAM reads: { success, data }
+// v1 VAM sends: { ledgerId, fromDate, toDate, physicalAccountId, countryCode }
+//   v1 VAM reads: { success, data }
+// v2 VAM sends: { ledgerId, fromDate, toDate, physicalAccountId, page, limit }
+//   v2 VAM reads: { statements, hasMore }
 export async function bankStatement(req, res) {
-  const { physicalAccountId, fromDate, toDate } = req.body;
+  const { physicalAccountId, fromDate, toDate, page, limit } = req.body;
   if (!physicalAccountId) return res.status(400).json({ message: 'physicalAccountId is required' });
 
   const query = { accountNumber: physicalAccountId };
@@ -157,7 +159,17 @@ export async function bankStatement(req, res) {
     if (toDate) query.createdAt.$lte = new Date(toDate);
   }
 
-  const transactions = await Transaction.find(query).sort({ createdAt: -1 });
+  if (page !== undefined && limit !== undefined) {
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    const [statements, total] = await Promise.all([
+      Transaction.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      Transaction.countDocuments(query),
+    ]);
+    return res.json({ statements, hasMore: skip + statements.length < total });
+  }
 
+  const transactions = await Transaction.find(query).sort({ createdAt: -1 });
   return res.json({ success: true, data: transactions });
 }
